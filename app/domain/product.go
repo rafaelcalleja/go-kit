@@ -50,3 +50,7 @@ func NewProductId(id string) (*ProductId, error) {
 func (pi *ProductId) String() string {
 	return uuid.New().String(pi.id)
 }
+
+func (pi *ProductId) Equals(other *ProductId) bool {
+	return other.String() == pi.String()
+}
