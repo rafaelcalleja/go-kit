@@ -19,6 +19,6 @@ func (m ProductRepository) Save(p *domain.Product) error {
 }
 
 func (m ProductRepository) Of(id *domain.ProductId) (*domain.Product, error) {
-	m.logger.Debugf("Of " + id.String())
+	m.logger.Debugf("Of %s", id)
 	return domain.NewProduct(id.String())
 }
