@@ -26,9 +26,9 @@ func (service ProductService) CreateProduct(id string) error {
 		return err
 	}
 
-	_, err = service.repository.Of(product.ID())
+	exists, _ := service.repository.Of(product.ID())
 
-	if nil != err {
+	if nil != exists {
 		return fmt.Errorf("%w: %s", ErrProductAlreadyExists, id)
 	}
 
