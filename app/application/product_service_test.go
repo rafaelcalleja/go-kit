@@ -8,7 +8,6 @@ import (
 )
 
 func TestCreateProduct(t *testing.T) {
-	t.Setenv("LOG_LEVEL", "DEBUG")
 	defaultLogger := logger.NewNullLogger()
 	repository := infrastructure.NewProductRepository(defaultLogger)
 	service := NewProductService(repository)
