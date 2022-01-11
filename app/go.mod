@@ -2,6 +2,11 @@ module github.com/rafaelcalleja/go-kit/app
 
 go 1.17
 
+replace (
+	github.com/rafaelcalleja/go-kit/logger => ../logger
+	github.com/rafaelcalleja/go-kit/uuid => ../uuid
+)
+
 require (
 	github.com/rafaelcalleja/go-kit/logger v0.0.0-20220106180013-2a82d5d5e135
 	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220106111209-a42f8bd35c1e
