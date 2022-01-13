@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
+	"github.com/rafaelcalleja/go-kit/internal/store/mock"
 	"github.com/rafaelcalleja/go-kit/internal/store/ports"
 	"github.com/rafaelcalleja/go-kit/internal/store/service"
 	"google.golang.org/grpc"
@@ -12,7 +13,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	application := service.NewApplication(ctx)
+	application := service.NewApplication(ctx, mock.NewMockProductRepository())
 
 	server.RunGRPCServer(func(server *grpc.Server) {
 		svc := ports.NewGrpcServer(application)
