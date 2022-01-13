@@ -9,3 +9,11 @@ _proto:
       "--go_out=internal/common/genproto/store" --go_opt=paths=source_relative \
       --go-grpc_opt=require_unimplemented_servers=false \
       "--go-grpc_out=internal/common/genproto/store" --go-grpc_opt=paths=source_relative
+
+.PHONY: lint
+lint:
+	@docker-compose run --rm --no-deps dev make _lint
+
+.PHONY: _lint
+_lint:
+	go-cleanarch -infrastructure ports ./internal
