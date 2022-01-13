@@ -2,6 +2,7 @@
 proto:
 	@docker-compose run --rm --no-deps dev make _proto
 
+.PHONY: _proto
 _proto:
 	protoc \
       --proto_path=api/protobuf "api/protobuf/store.proto" \
