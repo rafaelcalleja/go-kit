@@ -1,5 +1,8 @@
 .PHONY: proto
 proto:
+	@docker-compose run --rm --no-deps dev make _proto
+
+_proto:
 	protoc \
       --proto_path=api/protobuf "api/protobuf/store.proto" \
       "--go_out=internal/common/genproto/store" --go_opt=paths=source_relative \
