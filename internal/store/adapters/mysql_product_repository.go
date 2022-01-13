@@ -1,7 +1,7 @@
-package infrastructure
+package adapters
 
 import (
-	"github.com/rafaelcalleja/go-kit/app/domain"
+	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 	"github.com/rafaelcalleja/go-kit/logger"
 )
 

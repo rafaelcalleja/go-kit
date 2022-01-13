@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package store;
+
+option go_package = "github.com/rafaelcalleja/go-kit/internal/store";
+
+import "google/protobuf/empty.proto";
+
+service StoreService {
+  rpc CreateProduct(CreateProductRequest) returns (google.protobuf.Empty) {}
+}
+
+message CreateProductRequest {
+  string productId = 1;
+}

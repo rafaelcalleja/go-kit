@@ -1,25 +1,25 @@
-package application
+package command
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/rafaelcalleja/go-kit/app/domain"
+	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 )
 
 var (
 	ErrProductAlreadyExists = errors.New("product exists")
 )
 
-type ProductService struct {
+type CreateProductHandler struct {
 	repository domain.ProductRepository
 }
 
-func NewProductService(repository domain.ProductRepository) *ProductService {
-	return &ProductService{repository}
+func NewCreateProductHandler(repository domain.ProductRepository) CreateProductHandler {
+	return CreateProductHandler{repository}
 }
 
-func (service ProductService) CreateProduct(id string) error {
+func (service CreateProductHandler) Handle(id string) error {
 	product, err := domain.NewProduct(id)
 
 	if nil != err {

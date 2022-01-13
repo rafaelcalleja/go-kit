@@ -1,9 +1,9 @@
-package application
+package command
 
 import (
 	"errors"
-	"github.com/rafaelcalleja/go-kit/app/domain"
-	"github.com/rafaelcalleja/go-kit/app/mock"
+	"github.com/rafaelcalleja/go-kit/internal/store/domain"
+	"github.com/rafaelcalleja/go-kit/internal/store/mock"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -11,14 +11,14 @@ import (
 func TestCreateProduct(t *testing.T) {
 	repository := mock.NewMockProductRepository()
 
-	service := NewProductService(repository)
+	service := NewCreateProductHandler(repository)
 
 	t.Run("product wrong id", func(t *testing.T) {
 		repository.OfFn = func(id *domain.ProductId) (*domain.Product, error) {
 			return domain.NewProduct(id.String())
 		}
 
-		err := service.CreateProduct("1")
+		err := service.Handle("1")
 		assert.True(t, errors.Is(err, domain.ErrWrongUuid))
 	})
 
@@ -27,7 +27,7 @@ func TestCreateProduct(t *testing.T) {
 			return domain.NewProduct(id.String())
 		}
 
-		err := service.CreateProduct("1b93d80c-16b3-4338-805c-67a071db988f")
+		err := service.Handle("1b93d80c-16b3-4338-805c-67a071db988f")
 		assert.True(t, errors.Is(err, ErrProductAlreadyExists))
 	})
 
@@ -43,7 +43,7 @@ func TestCreateProduct(t *testing.T) {
 		}
 
 		newUuid := "1b93d80c-16b3-4338-805c-67a071db988f"
-		err := service.CreateProduct(newUuid)
+		err := service.Handle(newUuid)
 		assert.Equal(t, newUuid, saved)
 		assert.Nil(t, err)
 	})
@@ -60,7 +60,7 @@ func TestCreateProduct(t *testing.T) {
 		}
 
 		newUuid := "1b93d80c-16b3-4338-805c-67a071db988f"
-		err := service.CreateProduct(newUuid)
+		err := service.Handle(newUuid)
 
 		assert.True(t, called)
 		assert.NotNil(t, err)
