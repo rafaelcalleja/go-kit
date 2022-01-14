@@ -11,8 +11,8 @@ replace (
 require (
 	github.com/rafaelcalleja/go-kit/cmd/helper v0.0.0-00010101000000-000000000000
 	github.com/rafaelcalleja/go-kit/cmd/termcolor v0.0.0-00010101000000-000000000000
-	github.com/rafaelcalleja/go-kit/logger v0.0.0-20220107132023-857873b5a85c
-	github.com/spf13/cobra v1.3.0
+	github.com/rafaelcalleja/go-kit/logger v0.0.0-00010101000000-000000000000
+	github.com/spf13/cobra v1.2.0
 )
 
 require (
