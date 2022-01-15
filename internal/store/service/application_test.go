@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"errors"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests"
@@ -19,6 +22,9 @@ import (
 var (
 	grpcAddr          = "localhost:3000"
 	productRepository = mock.NewMockProductRepository()
+	commandBus        = commands.NewInMemCommandBus()
+	queryBus          = queries.NewInMemQueryBus()
+	eventBus          = events.NewInMemoryEventBus()
 )
 
 func TestGrpcClientCreatingProduct(t *testing.T) {
@@ -44,7 +50,7 @@ func TestGrpcClientCreatingProduct(t *testing.T) {
 }
 
 func startService() bool {
-	app := NewApplication(context.Background(), productRepository)
+	app := NewApplication(context.Background(), productRepository, commandBus, queryBus, eventBus)
 
 	go server.RunGRPCServerOnAddr(grpcAddr, func(server *grpc.Server) {
 		svc := ports.NewGrpcServer(app)

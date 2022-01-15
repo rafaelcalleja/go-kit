@@ -19,6 +19,13 @@ func (g *googleUuid) String(uuid UUID) string {
 	return guuid.String()
 }
 
+func (g *googleUuid) Create() UUID {
+	uuidString := googleuuid.New().String()
+	uuid, _ := g.Parse(uuidString)
+
+	return uuid
+}
+
 func newGoogle() *googleUuid {
 	return new(googleUuid)
 }

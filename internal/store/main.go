@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
 	"github.com/rafaelcalleja/go-kit/internal/store/mock"
@@ -13,7 +16,11 @@ import (
 func main() {
 	ctx := context.Background()
 
-	application := service.NewApplication(ctx, mock.NewMockProductRepository())
+	commandBus := commands.NewInMemCommandBus()
+	queryBus := queries.NewInMemQueryBus()
+	eventBus := events.NewInMemoryEventBus()
+
+	application := service.NewApplication(ctx, mock.NewMockProductRepository(), commandBus, queryBus, eventBus)
 
 	server.RunGRPCServer(func(server *grpc.Server) {
 		svc := ports.NewGrpcServer(application)

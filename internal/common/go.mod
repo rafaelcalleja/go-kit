@@ -2,10 +2,13 @@ module github.com/rafaelcalleja/go-kit/internal/common
 
 go 1.17
 
+replace github.com/rafaelcalleja/go-kit/uuid => ./../../uuid
+
 require (
 	cloud.google.com/go v0.34.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pkg/errors v0.8.1
+	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220114085949-e6ff973b8411
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/grpc v1.43.0
@@ -15,6 +18,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.0 // indirect
+	github.com/google/uuid v1.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f // indirect

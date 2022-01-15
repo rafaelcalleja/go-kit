@@ -12,7 +12,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/rafaelcalleja/go-kit/internal/common v0.0.0-00010101000000-000000000000
 	github.com/rafaelcalleja/go-kit/logger v0.0.0-20220106180013-2a82d5d5e135
-	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220106111209-a42f8bd35c1e
+	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220114085949-e6ff973b8411
 	github.com/stretchr/testify v1.7.0
 	google.golang.org/grpc v1.43.0
 )

@@ -1,25 +1,36 @@
 package command
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 )
 
 var (
-	ErrProductAlreadyExists = errors.New("product exists")
+	ErrProductAlreadyExists    = errors.New("product exists")
+	ErrProductCommandUnhandled = errors.New("unexpected command")
 )
 
 type CreateProductHandler struct {
 	repository domain.ProductRepository
+	eventBus   events.Bus
 }
 
-func NewCreateProductHandler(repository domain.ProductRepository) CreateProductHandler {
-	return CreateProductHandler{repository}
+func NewCreateProductHandler(repository domain.ProductRepository, eventBus events.Bus) CreateProductHandler {
+	return CreateProductHandler{repository, eventBus}
 }
 
-func (service CreateProductHandler) Handle(id string) error {
+func (service CreateProductHandler) Handle(ctx context.Context, command commands.Command) error {
+	createProductCommand, ok := command.(CreateProductCommand)
+	if !ok {
+		return ErrProductCommandUnhandled
+	}
+
+	id := createProductCommand.id
 	product, err := domain.NewProduct(id)
 
 	if nil != err {
@@ -32,5 +43,9 @@ func (service CreateProductHandler) Handle(id string) error {
 		return fmt.Errorf("%w: %s", ErrProductAlreadyExists, id)
 	}
 
-	return service.repository.Save(product)
+	if err := service.repository.Save(product); err != nil {
+		return err
+	}
+
+	return service.eventBus.Publish(ctx, product.PullEvents())
 }
