@@ -5,9 +5,9 @@ import "context"
 // Bus defines the expected behaviour from a command bus.
 type Bus interface {
 	// Dispatch is the method used to dispatch new commands.
-	Dispatch(context.Context, Command) error
+	Dispatch(ctx context.Context, command Command) error
 	// Register is the method used to register a new command handler.
-	Register(Type, Handler)
+	Register(cmdType Type, handler Handler)
 }
 
 // Type represents an application command type.

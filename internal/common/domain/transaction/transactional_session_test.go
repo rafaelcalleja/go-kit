@@ -19,6 +19,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	}
 
 	t.Run("tx start failed", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockErr := errors.New("mock tx")
 
@@ -34,6 +35,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("tx commit failed", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock commit")
@@ -55,6 +57,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("tx rollback failed", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock rollback")
@@ -76,6 +79,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("tx start success and committed", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockInitializer.BeginFn = func() (tx Transaction, err error) {
@@ -101,7 +105,8 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		require.False(t, calledRollback)
 	})
 
-	t.Run("tx start success and operation failed", func(t *testing.T) {
+	t.Run("tx start success and rollbacked", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockInitializer.BeginFn = func() (tx Transaction, err error) {
@@ -130,6 +135,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("panic in operation", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockInitializer.BeginFn = func() (tx Transaction, err error) {
@@ -158,6 +164,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("unexpected content when panic in operation", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 		mockInitializer.BeginFn = func() (tx Transaction, err error) {
@@ -189,6 +196,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("panic in tx start", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 
 		mockInitializer.BeginFn = func() (tx Transaction, err error) {
@@ -202,6 +210,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("panic in tx commit", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
@@ -220,6 +229,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	})
 
 	t.Run("panic in tx rollback", func(t *testing.T) {
+		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
@@ -235,5 +245,19 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		err := session.ExecuteAtomically(errorOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrPanicInTransaction, errors.Unwrap(err))
+	})
+
+	t.Run("initializer return nil transaction without err", func(t *testing.T) {
+		t.Parallel()
+		mockInitializer := NewMockInitializer()
+
+		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+			return nil, nil
+		}
+
+		session := NewTransactionalSession(mockInitializer)
+		err := session.ExecuteAtomically(errorOperation)
+		require.Error(t, err)
+		require.ErrorIs(t, ErrInitializerNilTransaction, err)
 	})
 }

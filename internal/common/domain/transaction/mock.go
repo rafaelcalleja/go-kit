@@ -6,7 +6,7 @@ type MockInitializer struct {
 
 func NewMockInitializer() MockInitializer {
 	return MockInitializer{
-		BeginFn: func() (tx Transaction, err error) { return nil, nil },
+		BeginFn: func() (tx Transaction, err error) { return NewMockTransaction(), nil },
 	}
 }
 
@@ -32,4 +32,18 @@ func (m MockTransaction) Rollback() error {
 
 func (m MockTransaction) Commit() error {
 	return m.CommitFn()
+}
+
+type MockTransactionalSession struct {
+	ExecuteAtomicallyFn func(Operation) error
+}
+
+func NewTransactionalSessionMock() MockTransactionalSession {
+	return MockTransactionalSession{
+		ExecuteAtomicallyFn: func(operation Operation) error { return nil },
+	}
+}
+
+func (m MockTransactionalSession) ExecuteAtomically(operation Operation) error {
+	return m.ExecuteAtomicallyFn(operation)
 }

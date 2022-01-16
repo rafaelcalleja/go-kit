@@ -1,12 +1,13 @@
 package transaction
 
 import (
+	"errors"
 	"fmt"
-	"github.com/pkg/errors"
 )
 
 var (
 	ErrUnableToStartTransaction    = errors.New("unable to start transaction")
+	ErrInitializerNilTransaction   = errors.New("initializer nil transaction")
 	ErrUnableToRollbackTransaction = errors.New("unable to rollback transaction")
 	ErrUnableToCommitTransaction   = errors.New("unable to commit transaction")
 	ErrPanicInOperation            = errors.New("panic in operation")
@@ -23,7 +24,7 @@ func NewTransactionalSession(initializer Initializer) SessionInitializer {
 	}
 }
 
-func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) {
+func (s SessionInitializer) ExecuteAtomically(operation Operation) (err error) {
 	var tx Transaction
 
 	defer func() {
@@ -44,6 +45,10 @@ func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) 
 	}()
 
 	tx, err = s.initializer.Begin()
+
+	if nil == tx {
+		return ErrInitializerNilTransaction
+	}
 
 	if err != nil {
 		return fmt.Errorf("%w: %s", err, ErrUnableToStartTransaction.Error())
@@ -68,15 +73,15 @@ func (s *SessionInitializer) finishTransaction(err error, tx Transaction) (txErr
 		txErr = err
 		if rollbackErr := tx.Rollback(); rollbackErr != nil {
 			txErr = fmt.Errorf("%w: %s", rollbackErr, ErrUnableToRollbackTransaction.Error())
-
 		}
-		return
-	} else {
-		txErr = nil
-		if commitErr := tx.Commit(); commitErr != nil {
-			txErr = fmt.Errorf("%w: %s", commitErr, ErrUnableToCommitTransaction.Error())
 
-		}
 		return
 	}
+
+	txErr = nil
+	if commitErr := tx.Commit(); commitErr != nil {
+		txErr = fmt.Errorf("%w: %s", commitErr, ErrUnableToCommitTransaction.Error())
+	}
+
+	return
 }

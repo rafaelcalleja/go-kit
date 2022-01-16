@@ -27,3 +27,13 @@ func (b *CommandBusMock) Dispatch(ctx context.Context, command Command) error {
 func (b *CommandBusMock) Register(cmdType Type, handler Handler) {
 	b.RegisterFn(cmdType, handler)
 }
+
+type mockCommand struct{}
+
+func newMockCommand() mockCommand {
+	return mockCommand{}
+}
+
+func (command mockCommand) Type() Type {
+	return "mock.command.type"
+}

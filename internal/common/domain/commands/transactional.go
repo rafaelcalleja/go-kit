@@ -8,12 +8,12 @@ import (
 
 // TransactionalBus is an implementation of the commands.Handler.
 type TransactionalBus struct {
-	commandBus CommandBus
+	commandBus Bus
 	session    transaction.TransactionalSession
 }
 
-func NewTransactionalCommandBus(commandBus CommandBus, session transaction.TransactionalSession) TransactionalBus {
-	return TransactionalBus{
+func NewTransactionalCommandBus(commandBus Bus, session transaction.TransactionalSession) *TransactionalBus {
+	return &TransactionalBus{
 		commandBus: commandBus,
 		session:    session,
 	}

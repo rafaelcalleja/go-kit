@@ -10,7 +10,7 @@ type CommandBus struct {
 }
 
 // NewInMemCommandBus initializes a new instance of CommandBus.
-func NewInMemCommandBus() *CommandBus {
+func NewInMemCommandBus() Bus {
 	return &CommandBus{
 		handlers: make(map[Type]Handler),
 	}
