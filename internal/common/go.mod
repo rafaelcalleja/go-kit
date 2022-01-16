@@ -6,7 +6,9 @@ replace github.com/rafaelcalleja/go-kit/uuid => ./../../uuid
 
 require (
 	cloud.google.com/go v0.34.0
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/pkg/errors v0.8.1
 	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220114085949-e6ff973b8411
 	github.com/sirupsen/logrus v1.8.1
