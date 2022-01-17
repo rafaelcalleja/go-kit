@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
@@ -23,8 +25,9 @@ import (
 var (
 	grpcAddr          = "localhost:3000"
 	productRepository = mock.NewMockProductRepository()
+	inMemBus          = commands.NewInMemCommandBus()
 	commandBus        = commands.NewTransactionalCommandBus(
-		commands.NewInMemCommandBus(),
+		inMemBus,
 		transaction.NewTransactionalSession(
 			transaction.NewMockInitializer(),
 		),
@@ -35,6 +38,14 @@ var (
 
 func TestGrpcClientCreatingProduct(t *testing.T) {
 	t.Parallel()
+
+	inMemBus.(*commands.CommandBus).UseMiddleware(
+		commands.NewMiddlewareFunc(func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd commands.Command) error {
+			defer fmt.Printf("POST - execute %s\n", cmd.Type())
+			fmt.Printf("PRE - execute %s\n", cmd.Type())
+			return stack.Next().Handle(stack, closure)
+		}),
+	)
 
 	client := tests.NewStoreGrpcClient(t, grpcAddr)
 	productId := "c4546c87-c699-42cb-967a-73a99cd9b7c9"

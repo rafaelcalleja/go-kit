@@ -2,8 +2,6 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
 // CommandBus is an in-memory implementation of the commands.Bus.
@@ -31,14 +29,6 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
 }
 
 func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) error {
-	b.UseMiddleware(
-		NewMiddlewareFunc(func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error {
-			defer fmt.Printf("POST - execute %s\n", cmd.Type())
-			fmt.Printf("PRE - execute %s\n", cmd.Type())
-			return stack.Next().Handle(stack, closure)
-		}),
-	)
-
 	return b.pipeline.Handle(handler, ctx, cmd)
 }
 
