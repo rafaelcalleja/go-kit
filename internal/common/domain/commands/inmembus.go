@@ -3,19 +3,20 @@ package commands
 import (
 	"context"
 	"fmt"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
 // CommandBus is an in-memory implementation of the commands.Bus.
 type CommandBus struct {
 	handlers map[Type]Handler
-	chain    MiddlewaresChain
+	pipeline *Pipeline
 }
 
 // NewInMemCommandBus initializes a new instance of CommandBus.
 func NewInMemCommandBus() Bus {
 	return &CommandBus{
 		handlers: make(map[Type]Handler),
-		chain:    make([]MiddlewareFunc, 0),
+		pipeline: NewPipeline(),
 	}
 }
 
@@ -30,21 +31,19 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
 }
 
 func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) error {
-	b.UseMiddleware(func(stack MiddlewaresChain, ctx context.Context, command Command) error {
-		defer fmt.Printf("POST - execute %s\n", command.Type())
-		fmt.Printf("PRE - execute %s\n", command.Type())
-		return stack.Next(ctx, cmd)
-	})
+	b.UseMiddleware(
+		NewMiddlewareFunc(func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error {
+			defer fmt.Printf("POST - execute %s\n", cmd.Type())
+			fmt.Printf("PRE - execute %s\n", cmd.Type())
+			return stack.Next().Handle(stack, closure)
+		}),
+	)
 
-	newChain := append(b.chain, func(stack MiddlewaresChain, ctx context.Context, command Command) error {
-		return handler.Handle(ctx, cmd)
-	})
-
-	return newChain.Next(ctx, cmd)
+	return b.pipeline.Handle(handler, ctx, cmd)
 }
 
-func (b *CommandBus) UseMiddleware(middleware ...MiddlewareFunc) {
-	b.chain = append(b.chain, middleware...)
+func (b *CommandBus) UseMiddleware(middleware ...Middleware) {
+	b.pipeline.Add(middleware...)
 }
 
 // Register implements the commands.Bus interface.

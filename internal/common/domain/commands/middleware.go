@@ -2,46 +2,58 @@ package commands
 
 import (
 	"context"
-	"fmt"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
-// MiddlewareFunc defines the handler used by middleware as return value.
-type MiddlewareFunc func(stack MiddlewaresChain, ctx context.Context, command Command) error
+type Middleware interface {
+	Handle(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error
+}
 
-// MiddlewaresChain defines a MiddlewareFunc slice.
-type MiddlewaresChain []MiddlewareFunc
+type Func func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error
 
-// Last returns the last handler in the chain. i.e. the last handler is the main one.
-func (c MiddlewaresChain) Last() MiddlewareFunc {
-	if length := len(c); length > 0 {
-		return c[length-1]
+type Wrapper struct {
+	middlewareFn Func
+}
+
+func NewMiddlewareFunc(fn Func) *Wrapper {
+	return &Wrapper{
+		fn,
 	}
-	return nil
 }
 
-func (c MiddlewaresChain) First() MiddlewareFunc {
-	return c[0]
+func (w Wrapper) Handle(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error {
+	return w.middlewareFn(stack, closure, ctx, cmd)
 }
 
-func (c MiddlewaresChain) Debug() {
-	fmt.Printf("len=%d cap=%d %v\n", c.Len(), c.Cap(), c)
+type Pipeline struct {
+	middlewares []Middleware
 }
 
-func (c MiddlewaresChain) Len() int {
-	return len(c)
+func NewPipeline() *Pipeline {
+	return &Pipeline{make([]Middleware, 0)}
 }
 
-func (c MiddlewaresChain) Cap() int {
-	return cap(c)
+func (p *Pipeline) Add(middlewares ...Middleware) {
+	p.middlewares = append(p.middlewares, middlewares...)
 }
 
-func (c *MiddlewaresChain) Next(ctx context.Context, command Command) error {
-	if 0 == c.Len() {
-		return nil
+func (p Pipeline) Handle(handler Handler, ctx context.Context, cmd Command) error {
+	pipeline := middleware.NewPipeline()
+
+	closure := func() error {
+		return handler.Handle(ctx, cmd)
 	}
 
-	next := (*c)[0:c.Cap()][0]
-	*c = (*c)[1:c.Cap()]
+	elements := make([]middleware.Middleware, len(p.middlewares))
+	for i, v := range p.middlewares {
+		elements[i] = middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, closure middleware.Closure) error {
+			return stack.Next().Handle(stack, func() error {
+				return v.Handle(stack, closure, ctx, cmd)
+			})
+		})
+	}
 
-	return next(*c, ctx, command)
+	pipeline.Add(elements...)
+
+	return pipeline.Handle(closure)
 }
