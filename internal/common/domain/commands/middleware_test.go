@@ -22,11 +22,11 @@ func TestDefaultPipeline_Handle(t *testing.T) {
 		return stack.Next().Handle(stack, closure)
 	})
 
-	calledHandler := false
+	calledHandlerCounter := 0
 	mockHandler.HandleFn = func(currentCtx context.Context, command Command) error {
 		require.Same(t, ctx, currentCtx)
 		require.Equal(t, mockCommand.Type(), command.Type())
-		calledHandler = true
+		calledHandlerCounter++
 		return nil
 	}
 
@@ -35,6 +35,11 @@ func TestDefaultPipeline_Handle(t *testing.T) {
 	err := pipeline.Handle(mockHandler, ctx, mockCommand)
 	require.NoError(t, err)
 
-	require.True(t, calledHandler)
+	require.Equal(t, 1, calledHandlerCounter)
 	require.Equal(t, 2, countCalled)
+
+	err = pipeline.Handle(mockHandler, ctx, mockCommand)
+	require.NoError(t, err)
+	require.Equal(t, 2, calledHandlerCounter)
+	require.Equal(t, 4, countCalled)
 }
