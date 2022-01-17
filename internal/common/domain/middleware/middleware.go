@@ -13,7 +13,7 @@ type Pipeline struct {
 
 func NewPipeline() *Pipeline {
 	return &Pipeline{
-		stack: &DefaultStackMiddleware{NewStack()},
+		stack: NewDefaultStackMiddleware(),
 	}
 }
 

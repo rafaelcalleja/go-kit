@@ -9,13 +9,13 @@ type Middleware interface {
 	Handle(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error
 }
 
-type Func func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error
+type MiddlewareFunc func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error
 
 type Wrapper struct {
-	middlewareFn Func
+	middlewareFn MiddlewareFunc
 }
 
-func NewMiddlewareFunc(fn Func) *Wrapper {
+func NewMiddlewareFunc(fn MiddlewareFunc) *Wrapper {
 	return &Wrapper{
 		fn,
 	}
@@ -25,19 +25,24 @@ func (w Wrapper) Handle(stack middleware.StackMiddleware, closure middleware.Clo
 	return w.middlewareFn(stack, closure, ctx, cmd)
 }
 
-type Pipeline struct {
+type Pipeline interface {
+	Add(middlewares ...Middleware)
+	Handle(handler Handler, ctx context.Context, cmd Command) error
+}
+
+type DefaultPipeline struct {
 	middlewares []Middleware
 }
 
-func NewPipeline() *Pipeline {
-	return &Pipeline{make([]Middleware, 0)}
+func NewPipeline() *DefaultPipeline {
+	return &DefaultPipeline{make([]Middleware, 0)}
 }
 
-func (p *Pipeline) Add(middlewares ...Middleware) {
+func (p *DefaultPipeline) Add(middlewares ...Middleware) {
 	p.middlewares = append(p.middlewares, middlewares...)
 }
 
-func (p Pipeline) Handle(handler Handler, ctx context.Context, cmd Command) error {
+func (p DefaultPipeline) Handle(handler Handler, ctx context.Context, cmd Command) error {
 	pipeline := middleware.NewPipeline()
 
 	closure := func() error {

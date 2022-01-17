@@ -8,6 +8,34 @@ type DefaultStackMiddleware struct {
 	stack *Stack
 }
 
+func NewDefaultStackMiddlewareWith(options ...func(*DefaultStackMiddleware) error) (DefaultStackMiddleware, error) {
+	var stackMiddleware = new(DefaultStackMiddleware)
+
+	for _, option := range options {
+		err := option(stackMiddleware)
+		if err != nil {
+			return DefaultStackMiddleware{}, err
+		}
+	}
+
+	return *stackMiddleware, nil
+}
+
+func DefaultStackMiddlewareWithStack(stack *Stack) func(*DefaultStackMiddleware) error {
+	return func(s *DefaultStackMiddleware) error {
+		s.stack = stack
+		return nil
+	}
+}
+
+func NewDefaultStackMiddleware() *DefaultStackMiddleware {
+	stack, _ := NewDefaultStackMiddlewareWith(
+		DefaultStackMiddlewareWithStack(NewStack()),
+	)
+
+	return &stack
+}
+
 func (s *DefaultStackMiddleware) Stack() *Stack {
 	return s.stack
 }
@@ -39,5 +67,9 @@ func (s *DefaultStackMiddleware) Pop() interface{} {
 func (s *DefaultStackMiddleware) Clone() DefaultStackMiddleware {
 	clone := s.stack.Clone()
 
-	return DefaultStackMiddleware{&clone}
+	stackMiddleware, _ := NewDefaultStackMiddlewareWith(
+		DefaultStackMiddlewareWithStack(&clone),
+	)
+
+	return stackMiddleware
 }

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/stretchr/testify/require"
+	"reflect"
 	"testing"
 )
 
@@ -64,4 +65,26 @@ func TestVariadicStack(t *testing.T) {
 	s3 := factoryCaster("4", "3", "2", "1")
 	require.Equal(t, "4", s3.Pop())
 	require.Equal(t, 3, s3.Size())
+}
+
+func TestStack_Pop(t *testing.T) {
+	stack := NewStack()
+	require.Nil(t, stack.Pop())
+}
+
+func TestStack_Clone(t *testing.T) {
+	stack := NewStack()
+	stack.Push("foo")
+	stack.Push("bar")
+
+	clone := stack.Clone()
+	require.True(t, reflect.DeepEqual(stack, &clone))
+	require.NotSame(t, stack, &clone)
+
+	stack.Pop()
+	stack.Pop()
+
+	require.Equal(t, 2, clone.Size())
+	require.Equal(t, 0, stack.Size())
+	require.Equal(t, "foo", clone.Pop())
 }

@@ -37,3 +37,40 @@ func newMockCommand() mockCommand {
 func (command mockCommand) Type() Type {
 	return "mock.command.type"
 }
+
+type mockHandler struct {
+	HandleFn func(ctx context.Context, command Command) error
+}
+
+func newMockHandler() mockHandler {
+	return mockHandler{
+		HandleFn: func(ctx context.Context, command Command) error {
+			return nil
+		},
+	}
+}
+
+func (h mockHandler) Handle(ctx context.Context, command Command) error {
+	return h.HandleFn(ctx, command)
+}
+
+type mockPipeline struct {
+	HandleFn func(handler Handler, ctx context.Context, command Command) error
+	AddFn    func(middlewares ...Middleware)
+}
+
+func newMockPipeline() mockPipeline {
+	return mockPipeline{
+		HandleFn: func(handler Handler, ctx context.Context, command Command) error {
+			return nil
+		},
+	}
+}
+
+func (p mockPipeline) Handle(handler Handler, ctx context.Context, command Command) error {
+	return p.HandleFn(handler, ctx, command)
+}
+
+func (p mockPipeline) Add(middlewares ...Middleware) {
+	p.AddFn(middlewares...)
+}

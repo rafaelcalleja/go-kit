@@ -7,15 +7,42 @@ import (
 // CommandBus is an in-memory implementation of the commands.Bus.
 type CommandBus struct {
 	handlers map[Type]Handler
-	pipeline *Pipeline
+	pipeline Pipeline
+}
+
+func NewInMemCommandBusWith(options ...func(*CommandBus) error) (CommandBus, error) {
+	var commandBus = new(CommandBus)
+
+	for _, option := range options {
+		err := option(commandBus)
+		if err != nil {
+			return CommandBus{}, err
+		}
+	}
+
+	if nil == commandBus.handlers {
+		commandBus.handlers = make(map[Type]Handler)
+	}
+
+	return *commandBus, nil
+}
+
+func InMemCommandBusWithPipeline(pipeline Pipeline) func(*CommandBus) error {
+	return func(s *CommandBus) error {
+		s.pipeline = pipeline
+		return nil
+	}
 }
 
 // NewInMemCommandBus initializes a new instance of CommandBus.
 func NewInMemCommandBus() Bus {
-	return &CommandBus{
-		handlers: make(map[Type]Handler),
-		pipeline: NewPipeline(),
-	}
+	pipeline := NewPipeline()
+
+	commandBus, _ := NewInMemCommandBusWith(
+		InMemCommandBusWithPipeline(pipeline),
+	)
+
+	return &commandBus
 }
 
 // Dispatch implements the commands.Bus interface.
