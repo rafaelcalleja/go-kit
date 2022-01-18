@@ -40,8 +40,8 @@ func (s *DefaultStackMiddleware) Stack() *Stack {
 	return s.stack
 }
 
-func (s *DefaultStackMiddleware) Handle(_ StackMiddleware, closure Closure) error {
-	return closure()
+func (s *DefaultStackMiddleware) Handle(_ StackMiddleware, ctx Context) error {
+	return ctx.Invoke()
 }
 
 func (s *DefaultStackMiddleware) Next() Middleware {

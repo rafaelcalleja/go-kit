@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
 // CommandBus is an in-memory implementation of the commands.Bus.
@@ -59,7 +60,7 @@ func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) e
 	return b.pipeline.Handle(handler, ctx, cmd)
 }
 
-func (b *CommandBus) UseMiddleware(middleware ...Middleware) {
+func (b *CommandBus) UseMiddleware(middleware ...middleware.Middleware) {
 	b.pipeline.Add(middleware...)
 }
 

@@ -40,7 +40,7 @@ func TestCommandBus_Dispatch(t *testing.T) {
 	t.Run("Middlewares are added to collaborator", func(t *testing.T) {
 		mockPipeline := newMockPipeline()
 		called := false
-		mockPipeline.AddFn = func(middlewares ...Middleware) {
+		mockPipeline.AddFn = func(middlewares ...middleware.Middleware) {
 			called = true
 		}
 
@@ -49,8 +49,8 @@ func TestCommandBus_Dispatch(t *testing.T) {
 		)
 		require.NoError(t, err)
 
-		commandBus.UseMiddleware(NewMiddlewareFunc(
-			func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd Command) error {
+		commandBus.UseMiddleware(middleware.NewMiddlewareFunc(
+			func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
 				return nil
 			}),
 		)

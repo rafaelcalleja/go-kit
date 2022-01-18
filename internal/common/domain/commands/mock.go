@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
 // CommandBusMock is a mock implementation of the commands.Bus.
@@ -56,7 +57,7 @@ func (h mockHandler) Handle(ctx context.Context, command Command) error {
 
 type mockPipeline struct {
 	HandleFn func(handler Handler, ctx context.Context, command Command) error
-	AddFn    func(middlewares ...Middleware)
+	AddFn    func(middlewares ...middleware.Middleware)
 }
 
 func newMockPipeline() mockPipeline {
@@ -71,6 +72,6 @@ func (p mockPipeline) Handle(handler Handler, ctx context.Context, command Comma
 	return p.HandleFn(handler, ctx, command)
 }
 
-func (p mockPipeline) Add(middlewares ...Middleware) {
+func (p mockPipeline) Add(middlewares ...middleware.Middleware) {
 	p.AddFn(middlewares...)
 }

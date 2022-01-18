@@ -1,6 +1,6 @@
 package middleware
 
-type Func func(stack StackMiddleware, closure Closure) error
+type Func func(stack StackMiddleware, ctx Context) error
 
 type Wrapper struct {
 	middlewareFn Func
@@ -12,6 +12,6 @@ func NewMiddlewareFunc(fn Func) *Wrapper {
 	}
 }
 
-func (w Wrapper) Handle(stack StackMiddleware, closure Closure) error {
-	return w.middlewareFn(stack, closure)
+func (w Wrapper) Handle(stack StackMiddleware, ctx Context) error {
+	return w.middlewareFn(stack, ctx)
 }

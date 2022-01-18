@@ -1,7 +1,7 @@
 package middleware
 
 type Middleware interface {
-	Handle(stack StackMiddleware, closure Closure) error
+	Handle(stack StackMiddleware, ctx Context) error
 }
 
 // Closure defines the handler used by middleware as return value.
@@ -26,8 +26,8 @@ func (p *Pipeline) Add(middlewares ...Middleware) {
 	p.stack.Push(elements...)
 }
 
-func (p Pipeline) Handle(closure Closure) error {
+func (p Pipeline) Handle(ctx Context) error {
 	clone := p.stack.Clone()
 
-	return clone.Next().Handle(&clone, closure)
+	return clone.Next().Handle(&clone, ctx)
 }
