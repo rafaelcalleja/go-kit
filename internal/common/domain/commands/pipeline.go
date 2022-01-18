@@ -30,9 +30,7 @@ func (p DefaultPipeline) Handle(handler Handler, ctx context.Context, cmd Comman
 	}
 
 	pipeline.Add(middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
-		middlewareCtx.Set("ctx", ctx)
-		middlewareCtx.Set("command", cmd)
-		middlewareCtx.Set("handler", handler)
+		setPipelineContext(handler, ctx, cmd, middlewareCtx)
 
 		return stack.Next().Handle(stack, middlewareCtx)
 	}))

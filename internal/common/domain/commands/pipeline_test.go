@@ -17,8 +17,9 @@ func TestDefaultPipeline_Handle(t *testing.T) {
 	countCalled := 0
 	middlewareA := middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
 		countCalled++
-		currentCtx := middlewareCtx.Get("ctx")
-		cmd := middlewareCtx.Get("command").(Command)
+		pipelineContext := GetPipelineContext(middlewareCtx)
+		currentCtx := pipelineContext.Ctx
+		cmd := pipelineContext.Command
 
 		require.Same(t, ctx, currentCtx)
 		require.Equal(t, mockCommand.Type(), cmd.Type())
