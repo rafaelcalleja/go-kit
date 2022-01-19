@@ -39,11 +39,14 @@ var (
 func TestGrpcClientCreatingProduct(t *testing.T) {
 	t.Parallel()
 
+	productId := "c4546c87-c699-42cb-967a-73a99cd9b7c9"
+
 	eventCalledCounter := 0
 	eventBus.Subscribe(
 		domain.ProductCreatedEventType,
 		events.NewFuncHandler(func(ctx context.Context, event events.Event) error {
 			eventCalledCounter++
+			require.Equal(t, event.AggregateID(), productId)
 			return nil
 		}),
 	)
@@ -62,7 +65,6 @@ func TestGrpcClientCreatingProduct(t *testing.T) {
 	)
 
 	client := tests.NewStoreGrpcClient(t, grpcAddr)
-	productId := "c4546c87-c699-42cb-967a-73a99cd9b7c9"
 
 	called := 0
 	productRepository.OfFn = func(id *domain.ProductId) (*domain.Product, error) {
