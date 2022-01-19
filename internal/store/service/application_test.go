@@ -39,6 +39,15 @@ var (
 func TestGrpcClientCreatingProduct(t *testing.T) {
 	t.Parallel()
 
+	eventCalledCounter := 0
+	eventBus.Subscribe(
+		domain.ProductCreatedEventType,
+		events.NewFuncHandler(func(ctx context.Context, event events.Event) error {
+			eventCalledCounter++
+			return nil
+		}),
+	)
+
 	inMemBus.(*commands.CommandBus).UseMiddleware(
 		middleware.NewMiddlewareTransactional(transaction.NewTransactionalSession(
 			transaction.NewMockInitializer(),
@@ -69,6 +78,7 @@ func TestGrpcClientCreatingProduct(t *testing.T) {
 	err := client.CreateProduct(context.Background(), productId)
 	require.NoError(t, err)
 	require.Equal(t, called, 2)
+	require.Equal(t, eventCalledCounter, 1)
 }
 
 func startService() bool {
