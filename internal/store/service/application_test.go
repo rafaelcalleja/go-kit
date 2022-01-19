@@ -40,10 +40,15 @@ func TestGrpcClientCreatingProduct(t *testing.T) {
 	t.Parallel()
 
 	inMemBus.(*commands.CommandBus).UseMiddleware(
-		commands.NewMiddlewareFunc(func(stack middleware.StackMiddleware, closure middleware.Closure, ctx context.Context, cmd commands.Command) error {
-			defer fmt.Printf("POST - execute %s\n", cmd.Type())
-			fmt.Printf("PRE - execute %s\n", cmd.Type())
-			return stack.Next().Handle(stack, closure)
+		middleware.NewMiddlewareTransactional(transaction.NewTransactionalSession(
+			transaction.NewMockInitializer(),
+		)),
+		middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, ctx middleware.Context) error {
+			pipelineContext := commands.GetPipelineContext(ctx)
+
+			defer fmt.Printf("POST - execute %s\n", pipelineContext.Command.Type())
+			fmt.Printf("PRE - execute %s\n", pipelineContext.Command.Type())
+			return stack.Next().Handle(stack, ctx)
 		}),
 	)
 
