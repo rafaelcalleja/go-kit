@@ -25,7 +25,9 @@ func NewApplication(
 
 	eventBus.Subscribe(
 		domain.ProductCreatedEventType,
-		event.NewIncreaseStockOnProductCreated(domain.NewStockCreateService()),
+		event.NewIncreaseStockOnProductCreated(
+			domain.NewStockCreateService(),
+		),
 	)
 
 	return application.Application{

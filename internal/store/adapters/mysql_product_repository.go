@@ -1,24 +1,83 @@
 package adapters
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
+	"time"
+
+	"github.com/huandu/go-sqlbuilder"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
-	"github.com/rafaelcalleja/go-kit/logger"
 )
 
+const (
+	sqlProductTable = "products"
+)
+
+type sqlProduct struct {
+	ID string `db:"id"`
+}
+
 type ProductRepository struct {
-	logger logger.Logger
+	db        *sql.DB
+	dbTimeout time.Duration
 }
 
-func NewProductRepository(logger logger.Logger) *ProductRepository {
-	return &ProductRepository{logger}
+func NewMysqlProductRepository(db *sql.DB, dbTimeout time.Duration) *ProductRepository {
+	return &ProductRepository{
+		db:        db,
+		dbTimeout: dbTimeout,
+	}
 }
 
-func (m ProductRepository) Save(p *domain.Product) error {
-	m.logger.Debugf("Save %s", p.ID())
+func (m ProductRepository) Save(ctx context.Context, product *domain.Product) error {
+	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
+	query, args := productSQLStruct.InsertInto(sqlProductTable, sqlProduct{
+		ID: product.ID().String(),
+	}).Build()
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
+	defer cancel()
+
+	_, err := m.db.ExecContext(ctxTimeout, query, args...)
+	if err != nil {
+		return fmt.Errorf("error trying to persist product on database: %v", err)
+	}
+
 	return nil
 }
 
-func (m ProductRepository) Of(id *domain.ProductId) (*domain.Product, error) {
-	m.logger.Debugf("Of %s", id)
-	return domain.NewProduct(id.String())
+func (m ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
+	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
+
+	sb := productSQLStruct.SelectFrom(sqlProductTable)
+	sb.Where(sb.Equal("id", id.String()))
+
+	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
+	defer cancel()
+
+	// Execute the query.
+	sb.Limit(1)
+	rawSql, args := sb.Build()
+
+	rows, err := m.db.QueryContext(ctxTimeout, rawSql, args...)
+
+	if nil != err {
+		return &domain.Product{}, fmt.Errorf("error trying to get a query database: %v", err)
+	}
+
+	defer func() {
+		_ = rows.Close()
+	}()
+
+	var product sqlProduct
+	for rows.Next() {
+		if err = rows.Scan(productSQLStruct.Addr(&product)...); err != nil {
+			return &domain.Product{}, fmt.Errorf("error trying to get a product on database: %v", err)
+		}
+
+		return domain.NewProduct(id.String())
+	}
+
+	return &domain.Product{}, fmt.Errorf("%v: %s", domain.ErrProductNotFound, id.String())
 }

@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"context"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 )
 
@@ -16,10 +17,10 @@ func NewMockProductRepository() *ProductRepository {
 	}
 }
 
-func (m ProductRepository) Save(p *domain.Product) error {
+func (m ProductRepository) Save(_ context.Context, p *domain.Product) error {
 	return m.SaveFn(p)
 }
 
-func (m ProductRepository) Of(id *domain.ProductId) (*domain.Product, error) {
+func (m ProductRepository) Of(_ context.Context, id *domain.ProductId) (*domain.Product, error) {
 	return m.OfFn(id)
 }

@@ -1,6 +1,6 @@
 .PHONY: docker-make
 docker-make proto lint test test_v test_short test_race test_stress test_reconnect test_all:
-	@docker-compose run --rm --no-deps dev make $(CMD)
+	@docker-compose run --rm dev make $(CMD)
 
 .PHONY: proto
 proto: CMD="_proto"

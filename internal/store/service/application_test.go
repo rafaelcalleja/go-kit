@@ -2,8 +2,14 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
+	"log"
+	"os"
+	"testing"
+	"time"
+
+	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
@@ -12,24 +18,22 @@ import (
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests"
+	"github.com/rafaelcalleja/go-kit/internal/store/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
-	"github.com/rafaelcalleja/go-kit/internal/store/mock"
 	"github.com/rafaelcalleja/go-kit/internal/store/ports"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"log"
-	"os"
-	"testing"
 )
 
 var (
-	grpcAddr          = "localhost:3000"
-	productRepository = mock.NewMockProductRepository()
-	inMemBus          = commands.NewInMemCommandBus()
-	commandBus        = commands.NewTransactionalCommandBus(
+	grpcAddr           = "localhost:3000"
+	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
+	productRepository  = adapters.NewMysqlProductRepository(mysqlConnection.DB, 60*time.Second)
+	inMemBus           = commands.NewInMemCommandBus()
+	commandBus         = commands.NewTransactionalCommandBus(
 		inMemBus,
 		transaction.NewTransactionalSession(
-			transaction.NewMockInitializer(),
+			common_adapters.NewTransactionInitializerDb(mysqlConnection),
 		),
 	)
 	queryBus = queries.NewInMemQueryBus()
@@ -38,6 +42,8 @@ var (
 
 func TestGrpcClientCreatingProduct(t *testing.T) {
 	t.Parallel()
+
+	mysql_tests.TruncateTables(mysqlConnection.DB, []string{"products", "stock_products"})
 
 	productId := "c4546c87-c699-42cb-967a-73a99cd9b7c9"
 
@@ -66,21 +72,16 @@ func TestGrpcClientCreatingProduct(t *testing.T) {
 
 	client := tests.NewStoreGrpcClient(t, grpcAddr)
 
-	called := 0
-	productRepository.OfFn = func(id *domain.ProductId) (*domain.Product, error) {
-		called++
-		return &domain.Product{}, errors.New("product not found")
-	}
-
-	productRepository.SaveFn = func(p *domain.Product) error {
-		called++
-		return nil
-	}
-
-	err := client.CreateProduct(context.Background(), productId)
+	ctx := context.Background()
+	err := client.CreateProduct(ctx, productId)
 	require.NoError(t, err)
-	require.Equal(t, called, 2)
 	require.Equal(t, eventCalledCounter, 1)
+
+	p, _ := domain.NewProductId(productId)
+
+	productFromRepository, err := productRepository.Of(ctx, p)
+	require.NoError(t, err)
+	require.Equal(t, productFromRepository.ID().String(), p.String())
 }
 
 func startService() bool {
