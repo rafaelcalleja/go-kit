@@ -27,3 +27,19 @@ func (b *EventBusMock) Publish(ctx context.Context, events []Event) error {
 func (b *EventBusMock) Subscribe(evtType Type, handler Handler) {
 	b.SubscribeFn(evtType, handler)
 }
+
+const MockEventType Type = "data.mocks"
+
+type MockEvent struct {
+	BaseEvent
+}
+
+func (e MockEvent) Type() Type {
+	return MockEventType
+}
+
+func NewMockEvent(id string) MockEvent {
+	return MockEvent{
+		BaseEvent: NewBaseEvent(id),
+	}
+}

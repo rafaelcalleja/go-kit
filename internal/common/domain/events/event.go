@@ -11,7 +11,7 @@ var (
 	ErrWrongUuid = errors.New("wrong uuid")
 )
 
-// Type represents a domain events type.
+// Type represents a domain data type.
 type Type string
 
 // Event represents a domain command.

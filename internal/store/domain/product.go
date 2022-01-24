@@ -12,8 +12,7 @@ var (
 
 type Product struct {
 	id *ProductId
-
-	events []events.Event
+	events.ImplementRecordableEvents
 }
 
 func (p Product) ID() *ProductId {
@@ -34,15 +33,4 @@ func NewProduct(id string) (*Product, error) {
 	product.Record(NewProductCreatedEvent(idVO.String()))
 
 	return product, nil
-}
-
-func (p *Product) Record(event events.Event) {
-	p.events = append(p.events, event)
-}
-
-func (p *Product) PullEvents() []events.Event {
-	evt := p.events
-	p.events = []events.Event{}
-
-	return evt
 }
