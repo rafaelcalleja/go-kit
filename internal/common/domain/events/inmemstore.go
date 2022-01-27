@@ -10,11 +10,38 @@ type EventStoreInMem struct {
 	indexes map[string]int
 }
 
-func NewEventStoreInMem() EventStoreInMem {
-	return EventStoreInMem{
-		events:  make([]Event, 0),
-		indexes: make(map[string]int),
+func NewInMemEventStore() *EventStoreInMem {
+	return NewInMemEventStoreWith()
+}
+
+func NewInMemEventStoreWith(options ...func(*EventStoreInMem)) *EventStoreInMem {
+	var eventStore = new(EventStoreInMem)
+
+	eventStore.mu = sync.Mutex{}
+	eventStore.events = make([]Event, 0)
+	eventStore.indexes = make(map[string]int)
+
+	for _, option := range options {
+		option(eventStore)
 	}
+
+	return eventStore
+}
+
+func WithMemIndex(indexes map[string]int) func(*EventStoreInMem) {
+	return func(m *EventStoreInMem) {
+		m.indexes = indexes
+	}
+}
+
+func WithMemStore(events []Event) func(*EventStoreInMem) {
+	return func(m *EventStoreInMem) {
+		m.events = events
+	}
+}
+
+func (e *EventStoreInMem) Events() []Event {
+	return e.events
 }
 
 func (e *EventStoreInMem) Append(event Event) {

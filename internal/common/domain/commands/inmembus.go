@@ -3,12 +3,14 @@ package commands
 import (
 	"context"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
+	"sync"
 )
 
 // CommandBus is an in-memory implementation of the commands.Bus.
 type CommandBus struct {
 	handlers map[Type]Handler
 	pipeline Pipeline
+	mu       sync.Mutex
 }
 
 func NewInMemCommandBusWith(options ...func(*CommandBus) error) (CommandBus, error) {
@@ -48,6 +50,9 @@ func NewInMemCommandBus() Bus {
 
 // Dispatch implements the commands.Bus interface.
 func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	handler, ok := b.handlers[cmd.Type()]
 	if !ok {
 		return nil
@@ -62,6 +67,10 @@ func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) e
 
 func (b *CommandBus) UseMiddleware(middleware ...middleware.Middleware) {
 	b.pipeline.Add(middleware...)
+}
+
+func (b *CommandBus) ResetMiddleware() {
+	b.pipeline = NewPipeline()
 }
 
 // Register implements the commands.Bus interface.

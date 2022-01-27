@@ -3,6 +3,7 @@ package transaction
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 var (
@@ -16,15 +17,19 @@ var (
 
 type SessionInitializer struct {
 	initializer Initializer
+	mutex       sync.Mutex
 }
 
-func NewTransactionalSession(initializer Initializer) SessionInitializer {
-	return SessionInitializer{
+func NewTransactionalSession(initializer Initializer) *SessionInitializer {
+	return &SessionInitializer{
 		initializer: initializer,
 	}
 }
 
-func (s SessionInitializer) ExecuteAtomically(operation Operation) (err error) {
+func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
 	var tx Transaction
 
 	defer func() {

@@ -23,8 +23,15 @@ func NewApplication(
 
 	commandBus.Register(command.CreateProductCommandType, creteProductHandler)
 
+	eventStore := events.NewInMemEventStore()
+
 	eventBus.Subscribe(
-		domain.ProductCreatedEventType,
+		events.NewStoreEventsOnEventCreated(
+			eventStore,
+		),
+	)
+
+	eventBus.Subscribe(
 		event.NewIncreaseStockOnProductCreated(
 			domain.NewStockCreateService(),
 		),
