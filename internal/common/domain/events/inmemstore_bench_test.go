@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	eventStore = NewEventStoreInMem()
+	eventStore = NewInMemEventStore()
 	events     = make([]Event, 0)
 )
 

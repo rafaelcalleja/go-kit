@@ -7,14 +7,14 @@ import (
 // EventBusMock is a mock implementation of the events.Bus.
 type EventBusMock struct {
 	PublishFn   func(ctx context.Context, events []Event) error
-	SubscribeFn func(evtType Type, handler Handler)
+	SubscribeFn func(handler Handler)
 }
 
 // NewMockEventBus initializes a new EventBus.
 func NewMockEventBus() *EventBusMock {
 	return &EventBusMock{
 		PublishFn:   func(ctx context.Context, events []Event) error { return nil },
-		SubscribeFn: func(evtType Type, handler Handler) {},
+		SubscribeFn: func(handler Handler) {},
 	}
 }
 
@@ -24,8 +24,8 @@ func (b *EventBusMock) Publish(ctx context.Context, events []Event) error {
 }
 
 // Subscribe implements the events.Bus interface.
-func (b *EventBusMock) Subscribe(evtType Type, handler Handler) {
-	b.SubscribeFn(evtType, handler)
+func (b *EventBusMock) Subscribe(handler Handler) {
+	b.SubscribeFn(handler)
 }
 
 const MockEventType Type = "data.mocks"

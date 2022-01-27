@@ -29,3 +29,7 @@ func (e IncreaseStockOnProductCreated) Handle(_ context.Context, evt events.Even
 
 	return e.stockCreateService.Create(productCreatedEvent.ID(), 1)
 }
+
+func (e IncreaseStockOnProductCreated) IsSubscribeTo(evt events.Event) bool {
+	return evt.Type() == domain.ProductCreatedEventType
+}

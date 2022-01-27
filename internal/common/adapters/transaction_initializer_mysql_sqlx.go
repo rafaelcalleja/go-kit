@@ -1,15 +1,16 @@
 package adapters
 
 import (
-	"github.com/jmoiron/sqlx"
+	"database/sql"
+
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 type TransactionInitializerDb struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewTransactionInitializerDb(db *sqlx.DB) TransactionInitializerDb {
+func NewTransactionInitializerDb(db *sql.DB) TransactionInitializerDb {
 	if db == nil {
 		panic("missing db")
 	}
@@ -20,8 +21,9 @@ func NewTransactionInitializerDb(db *sqlx.DB) TransactionInitializerDb {
 }
 
 func (i TransactionInitializerDb) Begin() (transaction.Transaction, error) {
-	tx, err := i.db.Beginx()
-	wrapper := transaction.NewTransactionWrapper(tx)
+	tx, err := i.db.Begin()
 
-	return wrapper, err
+	t := transaction.Transaction(tx)
+
+	return t, err
 }

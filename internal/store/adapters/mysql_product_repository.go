@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 )
 
@@ -19,13 +20,13 @@ type sqlProduct struct {
 }
 
 type ProductRepository struct {
-	db        *sql.DB
+	executor  transaction.Executor
 	dbTimeout time.Duration
 }
 
-func NewMysqlProductRepository(db *sql.DB, dbTimeout time.Duration) *ProductRepository {
+func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration) *ProductRepository {
 	return &ProductRepository{
-		db:        db,
+		executor:  executor,
 		dbTimeout: dbTimeout,
 	}
 }
@@ -39,7 +40,7 @@ func (m ProductRepository) Save(ctx context.Context, product *domain.Product) er
 	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
 	defer cancel()
 
-	_, err := m.db.ExecContext(ctxTimeout, query, args...)
+	_, err := m.executor.Get().(*sql.Tx).ExecContext(ctxTimeout, query, args...)
 	if err != nil {
 		return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
@@ -60,7 +61,15 @@ func (m ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domai
 	sb.Limit(1)
 	rawSql, args := sb.Build()
 
-	rows, err := m.db.QueryContext(ctxTimeout, rawSql, args...)
+	var rows *sql.Rows
+	var err error
+
+	switch m.executor.Get().(type) {
+	case *sql.Tx:
+		rows, err = m.executor.Get().(*sql.Tx).QueryContext(ctxTimeout, rawSql, args...)
+	case *sql.DB:
+		rows, err = m.executor.Get().(*sql.DB).QueryContext(ctxTimeout, rawSql, args...)
+	}
 
 	if nil != err {
 		return &domain.Product{}, fmt.Errorf("error trying to get a query database: %v", err)

@@ -6,26 +6,23 @@ import (
 
 // EventBus is an in-memory implementation of the events.Bus.
 type EventBus struct {
-	handlers map[Type][]Handler
+	handlers []Handler
 }
 
 // NewInMemoryEventBus initializes a new EventBus.
 func NewInMemoryEventBus() *EventBus {
 	return &EventBus{
-		handlers: make(map[Type][]Handler),
+		handlers: make([]Handler, 0),
 	}
 }
 
 // Publish implements the events.Bus interface.
 func (b *EventBus) Publish(ctx context.Context, events []Event) error {
 	for _, evt := range events {
-		handlers, ok := b.handlers[evt.Type()]
-		if !ok {
-			return nil
-		}
-
-		for _, handler := range handlers {
-			_ = handler.Handle(ctx, evt)
+		for _, handler := range b.handlers {
+			if true == handler.IsSubscribeTo(evt) {
+				_ = handler.Handle(ctx, evt)
+			}
 		}
 	}
 
@@ -33,11 +30,6 @@ func (b *EventBus) Publish(ctx context.Context, events []Event) error {
 }
 
 // Subscribe implements the events.Bus interface.
-func (b *EventBus) Subscribe(evtType Type, handler Handler) {
-	subscribersForType, ok := b.handlers[evtType]
-	if !ok {
-		b.handlers[evtType] = []Handler{handler}
-	}
-
-	b.handlers[evtType] = append(subscribersForType, handler)
+func (b *EventBus) Subscribe(handler Handler) {
+	b.handlers = append(b.handlers, handler)
 }
