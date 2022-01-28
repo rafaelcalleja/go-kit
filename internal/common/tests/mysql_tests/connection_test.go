@@ -5,12 +5,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestConnection(t *testing.T) {
 	db, _ := NewMySQLConnection()
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
+	db.SetConnMaxLifetime(50000 * time.Microsecond)
 
 	wg := sync.WaitGroup{}
 

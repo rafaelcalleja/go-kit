@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
@@ -19,6 +18,7 @@ func NewApplication(
 	queryBus queries.Bus,
 	eventBus events.Bus,
 ) application.Application {
+
 	creteProductHandler := command.NewCreateProductHandler(productRepository, eventBus)
 
 	commandBus.Register(command.CreateProductCommandType, creteProductHandler)

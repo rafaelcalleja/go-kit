@@ -37,12 +37,29 @@ func (m ProductRepository) Save(ctx context.Context, product *domain.Product) er
 		ID: product.ID().String(),
 	}).Build()
 
-	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
-	defer cancel()
+	ctxTimeout := context.Background()
+	/*ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
+	defer cancel()*/
 
-	_, err := m.executor.Get().(*sql.Tx).ExecContext(ctxTimeout, query, args...)
+	var err error
+
+	stmt, err := m.executor.Get().(*sql.Tx).PrepareContext(ctxTimeout, query)
 	if err != nil {
-		return fmt.Errorf("error trying to persist product on database: %v", err)
+		_, _ = m.executor.Get().(*sql.Tx).PrepareContext(ctxTimeout, query)
+		panic(err)
+		//return fmt.Errorf("error trying to persist product on database: %v", err)
+	}
+	defer func() {
+		err2 := stmt.Close()
+		if err2 != nil {
+			panic(err2)
+		}
+	}()
+
+	_, err = stmt.ExecContext(ctxTimeout, args...)
+	if err != nil {
+		panic(err)
+		//return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
 
 	return nil
@@ -82,7 +99,8 @@ func (m ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domai
 	var product sqlProduct
 	for rows.Next() {
 		if err = rows.Scan(productSQLStruct.Addr(&product)...); err != nil {
-			return &domain.Product{}, fmt.Errorf("error trying to get a product on database: %v", err)
+			panic(err)
+			//return &domain.Product{}, fmt.Errorf("error trying to get a product on database: %v", err)
 		}
 
 		return domain.NewProduct(id.String())
