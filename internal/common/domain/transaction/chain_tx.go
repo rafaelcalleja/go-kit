@@ -37,15 +37,16 @@ func NewChainTx(chain []Transaction) *ChainTx {
 }
 
 func (c ChainTx) Rollback() (err error) {
+	var err2 error
 	for _, tx := range c.chain {
-		err = tx.Rollback()
+		err2 = tx.Rollback()
 
-		if nil != err {
-			return err
+		if nil == err && err2 != nil {
+			err = err2
 		}
 	}
 
-	return
+	return err
 }
 
 func (c ChainTx) Commit() (err error) {
