@@ -61,7 +61,7 @@ func (o *InMemEventTransaction) Begin() (transaction.Transaction, error) {
 
 	o.locker[gid] = o.locker[gid] + 1
 
-	o.memento = o.originator.createMemento()
+	o.memento = o.originator.createMemento(nil)
 
 	return transaction.Transaction(o), nil
 }

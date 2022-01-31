@@ -32,7 +32,7 @@ func NewMementoTx(store *EventStoreInMem) *MementoTx {
 
 func (o *MementoTx) Begin() (transaction.Transaction, error) {
 	o.mu.Lock()
-	o.memento = o.originator.createMemento()
+	o.memento = o.originator.createMemento(o.store.events)
 
 	return transaction.Transaction(o), nil
 }
@@ -42,9 +42,8 @@ func (o *MementoTx) Rollback() error {
 	o.originator.restoreMemento(o.memento)
 	o.memento = nil
 
+	fmt.Println("ROOOOOOOOOOOOOOOOOL", len(o.originator.events), len(o.store.events), len(o.store.indexes))
 	o.store.events = make([]Event, 0)
-
-	fmt.Println("ROOOOOOOOOOOOOOOOOL", len(o.originator.events), len(o.store.events), o.store, len(o.store.Events()))
 
 	for _, v := range o.originator.events {
 		o.store.Append(v)

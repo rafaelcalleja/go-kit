@@ -4,10 +4,10 @@ type originator struct {
 	events []Event
 }
 
-func (o *originator) createMemento() *memento {
-	clone := make([]interface{}, len(o.events))
-	for i := range o.events {
-		clone[i] = o.events[i]
+func (o *originator) createMemento(events []Event) *memento {
+	clone := make([]interface{}, len(events))
+	for i := range events {
+		clone[i] = events[i]
 	}
 	return &memento{
 		data: clone,

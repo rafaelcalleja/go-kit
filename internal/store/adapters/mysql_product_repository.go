@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/pool"
+	"sync"
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
@@ -22,16 +24,39 @@ type sqlProduct struct {
 type ProductRepository struct {
 	executor  transaction.Executor
 	dbTimeout time.Duration
+	mu        *sync.RWMutex
+	pool      *pool.Semaphore
+	cond      *sync.Cond
+	wait      chan bool
 }
 
-func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration) *ProductRepository {
+func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, pool *pool.Semaphore, cond *sync.Cond, wait chan bool) *ProductRepository {
 	return &ProductRepository{
 		executor:  executor,
 		dbTimeout: dbTimeout,
+		mu:        mu,
+		pool:      pool,
+		cond:      cond,
+		wait:      wait,
 	}
 }
 
-func (m ProductRepository) Save(ctx context.Context, product *domain.Product) error {
+func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) error {
+	value := ctx.Value("intx")
+	if len(m.wait) == 0 && value != true {
+		m.cond.L.Lock()
+		for len(m.wait) == 0 {
+			m.cond.Wait()
+		}
+
+		<-m.wait
+		defer func() {
+			m.wait <- true
+			m.cond.L.Unlock()
+			m.cond.Broadcast()
+		}()
+	}
+
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 	query, args := productSQLStruct.InsertInto(sqlProductTable, sqlProduct{
 		ID: product.ID().String(),
@@ -65,7 +90,22 @@ func (m ProductRepository) Save(ctx context.Context, product *domain.Product) er
 	return nil
 }
 
-func (m ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
+func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
+	value := ctx.Value("intx")
+	if len(m.wait) == 0 && value != true {
+		m.cond.L.Lock()
+		for len(m.wait) == 0 {
+			m.cond.Wait()
+		}
+
+		<-m.wait
+		defer func() {
+			m.wait <- true
+			m.cond.L.Unlock()
+			m.cond.Broadcast()
+		}()
+	}
+
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 
 	sb := productSQLStruct.SelectFrom(sqlProductTable)

@@ -18,9 +18,11 @@ func (f FuncHandler) IsSubscribeTo(event Event) bool {
 	return f.isSubscribeToFn(event)
 }
 
-func NewFuncHandler(fn HandlerFn, fn2 IsSubscribeToFn) FuncHandler {
-	return FuncHandler{
+func NewFuncHandler(fn HandlerFn, fn2 IsSubscribeToFn) *Handler {
+	var h Handler = &FuncHandler{
 		fn,
 		fn2,
 	}
+
+	return &h
 }
