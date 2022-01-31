@@ -1,7 +1,6 @@
 package events
 
 import (
-	"fmt"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"sync"
 )
@@ -42,7 +41,6 @@ func (o *MementoTx) Rollback() error {
 	o.originator.restoreMemento(o.memento)
 	o.memento = nil
 
-	fmt.Println("ROOOOOOOOOOOOOOOOOL", len(o.originator.events), len(o.store.events), len(o.store.indexes))
 	o.store.events = make([]Event, 0)
 
 	for _, v := range o.originator.events {
