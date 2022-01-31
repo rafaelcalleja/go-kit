@@ -62,29 +62,18 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 		ID: product.ID().String(),
 	}).Build()
 
-	ctxTimeout := context.Background()
-	/*ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
-	defer cancel()*/
-
-	var err error
+	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
+	defer cancel()
 
 	stmt, err := m.executor.Get().(*sql.Tx).PrepareContext(ctxTimeout, query)
 	if err != nil {
-		_, _ = m.executor.Get().(*sql.Tx).PrepareContext(ctxTimeout, query)
-		panic(err)
-		//return fmt.Errorf("error trying to persist product on database: %v", err)
+		return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
-	defer func() {
-		err2 := stmt.Close()
-		if err2 != nil {
-			panic(err2)
-		}
-	}()
 
 	_, err = stmt.ExecContext(ctxTimeout, args...)
+
 	if err != nil {
-		panic(err)
-		//return fmt.Errorf("error trying to persist product on database: %v", err)
+		return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
 
 	return nil
