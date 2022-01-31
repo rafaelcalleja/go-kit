@@ -2,7 +2,6 @@ package adapters
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"sync"
 	"time"
@@ -62,7 +61,7 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
 	defer cancel()
 
-	stmt, err := m.executor.Get().(*sql.Tx).PrepareContext(ctxTimeout, query)
+	stmt, err := m.executor.PrepareContext(ctxTimeout, query)
 	if err != nil {
 		return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
@@ -100,19 +99,10 @@ func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*doma
 	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
 	defer cancel()
 
-	// Execute the query.
 	sb.Limit(1)
 	rawSql, args := sb.Build()
 
-	var rows *sql.Rows
-	var err error
-
-	switch m.executor.Get().(type) {
-	case *sql.Tx:
-		rows, err = m.executor.Get().(*sql.Tx).QueryContext(ctxTimeout, rawSql, args...)
-	case *sql.DB:
-		rows, err = m.executor.Get().(*sql.DB).QueryContext(ctxTimeout, rawSql, args...)
-	}
+	rows, err := m.executor.QueryContext(ctxTimeout, rawSql, args...)
 
 	if nil != err {
 		return &domain.Product{}, fmt.Errorf("error trying to get a query database: %v", err)
@@ -125,11 +115,10 @@ func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*doma
 	var product sqlProduct
 	for rows.Next() {
 		if err = rows.Scan(productSQLStruct.Addr(&product)...); err != nil {
-			panic(err)
-			//return &domain.Product{}, fmt.Errorf("error trying to get a product on database: %v", err)
+			return &domain.Product{}, fmt.Errorf("error trying to get a product on database: %v", err)
 		}
 
-		return domain.NewProduct(id.String())
+		return domain.NewProduct(product.ID)
 	}
 
 	return &domain.Product{}, fmt.Errorf("%v: %s", domain.ErrProductNotFound, id.String())

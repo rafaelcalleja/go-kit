@@ -19,7 +19,7 @@ func NewTransactionInitializerExecutorDb(db *sql.DB, executor transaction.Execut
 		panic("missing db")
 	}
 
-	executor.Set(db)
+	executor.WithConnection(db)
 
 	stack := emptyStack(db)
 
@@ -61,7 +61,7 @@ func (i *TransactionInitializerExecutorDb) Begin() (transaction.Transaction, err
 	tx, err := i.db.Begin()
 
 	i.stack = append(i.stack, tx)
-	i.executor.Set(i.last())
+	i.executor.WithConnection(i.last().(transaction.Connection))
 
 	return i, err
 }
@@ -76,7 +76,7 @@ func (i *TransactionInitializerExecutorDb) Rollback() error {
 			return
 		}
 		i.pop() //Discard current tx
-		i.executor.Set(i.pop())
+		i.executor.WithConnection(i.pop().(transaction.Connection))
 	}()
 
 	return i.last().(transaction.Transaction).Rollback()
@@ -92,7 +92,7 @@ func (i *TransactionInitializerExecutorDb) Commit() error {
 			return
 		}
 		i.pop() //Discard current tx
-		i.executor.Set(i.pop())
+		i.executor.WithConnection(i.pop().(transaction.Connection))
 	}()
 
 	return i.last().(transaction.Transaction).Commit()

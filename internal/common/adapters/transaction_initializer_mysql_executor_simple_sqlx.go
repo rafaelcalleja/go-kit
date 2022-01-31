@@ -36,7 +36,7 @@ func (i *TransactionInitializerExecutorSimpleDb) Begin() (transaction.Transactio
 		return nil, err
 	}
 
-	i.executor.Set(tx)
+	i.executor.WithConnection(tx)
 
 	return i, err
 }
@@ -44,15 +44,15 @@ func (i *TransactionInitializerExecutorSimpleDb) Begin() (transaction.Transactio
 func (i *TransactionInitializerExecutorSimpleDb) Rollback() (err error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	defer i.executor.Set(i.db)
+	defer i.executor.WithConnection(i.db)
 
-	return i.executor.Get().(transaction.Transaction).Rollback()
+	return i.executor.GetConnection().(transaction.Transaction).Rollback()
 }
 
 func (i *TransactionInitializerExecutorSimpleDb) Commit() error {
 	i.mu.Lock()
 	defer i.mu.Unlock()
-	defer i.executor.Set(i.db)
+	defer i.executor.WithConnection(i.db)
 
-	return i.executor.Get().(transaction.Transaction).Commit()
+	return i.executor.GetConnection().(transaction.Transaction).Commit()
 }
