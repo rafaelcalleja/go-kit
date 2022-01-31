@@ -1,5 +1,10 @@
 package transaction
 
+import (
+	"context"
+	"database/sql"
+)
+
 type Initializer interface {
 	Begin() (Transaction, error)
 }
@@ -9,20 +14,9 @@ type Transaction interface {
 	Commit() error
 }
 
-type Wrapper struct {
-	object Transaction
-}
-
-func NewTransactionWrapper(object interface{}) Wrapper {
-	return Wrapper{
-		object: object.(Transaction),
-	}
-}
-
-func (w Wrapper) Rollback() error {
-	return w.object.Rollback()
-}
-
-func (w Wrapper) Commit() error {
-	return w.object.Commit()
+type Connection interface {
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
