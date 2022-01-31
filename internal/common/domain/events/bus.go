@@ -8,7 +8,8 @@ type Bus interface {
 	// Publish is the method used to publish new data.
 	Publish(context.Context, []Event) error
 	// Subscribe is the method used to subscribe new event handlers.
-	Subscribe(Handler)
+	Subscribe(...*Handler)
+	Unsubscribe(...*Handler)
 }
 
 // Handler defines the expected behaviour from an event handler.

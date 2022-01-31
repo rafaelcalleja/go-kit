@@ -8,10 +8,12 @@ type StoreEventsOnEventCreated struct {
 	store Store
 }
 
-func NewStoreEventsOnEventCreated(store Store) StoreEventsOnEventCreated {
-	return StoreEventsOnEventCreated{
+func NewStoreEventsOnEventCreated(store Store) *Handler {
+	var handler Handler = StoreEventsOnEventCreated{
 		store: store,
 	}
+
+	return &handler
 }
 
 func (e StoreEventsOnEventCreated) Handle(_ context.Context, evt Event) error {

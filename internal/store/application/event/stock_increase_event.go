@@ -15,10 +15,12 @@ type IncreaseStockOnProductCreated struct {
 	stockCreateService domain.StockCreateService
 }
 
-func NewIncreaseStockOnProductCreated(stockCreateService domain.StockCreateService) IncreaseStockOnProductCreated {
-	return IncreaseStockOnProductCreated{
+func NewIncreaseStockOnProductCreated(stockCreateService domain.StockCreateService) *events.Handler {
+	var handler events.Handler = IncreaseStockOnProductCreated{
 		stockCreateService: stockCreateService,
 	}
+
+	return &handler
 }
 
 func (e IncreaseStockOnProductCreated) Handle(_ context.Context, evt events.Event) error {
