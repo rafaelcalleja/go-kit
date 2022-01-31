@@ -2,34 +2,27 @@ package commands
 
 import (
 	"context"
-	"sync"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/sync"
 )
 
 // WaiterBus is an implementation of the commands.Handler.
 type WaiterBus struct {
 	commandBus Bus
-	wait       chan bool
-	cond       *sync.Cond
+	locker     *sync.ChanSync
 }
 
-func NewWaiterBus(commandBus Bus, wait chan bool, cond *sync.Cond) *WaiterBus {
+func NewWaiterBus(commandBus Bus, locker *sync.ChanSync) *WaiterBus {
 	return &WaiterBus{
 		commandBus: commandBus,
-		wait:       wait,
-		cond:       cond,
+		locker:     locker,
 	}
 }
 
 // Dispatch implements the commands.Bus interface.
 func (b *WaiterBus) Dispatch(ctx context.Context, cmd Command) error {
-	<-b.wait
-	b.cond.L.Lock()
-	ctx = context.WithValue(ctx, "intx", true)
-	defer func() {
-		b.wait <- true
-		b.cond.Broadcast()
-		b.cond.L.Unlock()
-	}()
+	b.locker.Lock()
+	defer b.locker.Unlock()
+
 	return b.commandBus.Dispatch(ctx, cmd)
 }
 

@@ -34,7 +34,6 @@ func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) 
 
 	defer func() {
 		if p := recover(); p != nil {
-			//panic(p)
 			switch p.(type) {
 			case string:
 				err = fmt.Errorf("%w: %s", ErrPanicInOperation, p.(string))
@@ -66,7 +65,6 @@ func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) 
 func (s *SessionInitializer) finishTransaction(err error, tx Transaction) (txErr error) {
 	defer func() {
 		if p := recover(); p != nil {
-			panic(p)
 			switch p.(type) {
 			case string:
 				txErr = fmt.Errorf("%w: %s", ErrPanicInTransaction, p.(string))

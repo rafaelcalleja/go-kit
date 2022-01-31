@@ -17,6 +17,7 @@ import (
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
+	common_sync "github.com/rafaelcalleja/go-kit/internal/common/domain/sync"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
@@ -32,7 +33,7 @@ var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
 	executor           = transaction.NewExecutor()
-	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, &lock, cond, waitChannel)
+	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, &lock, locker)
 	inMemBus           = commands.NewInMemCommandBus()
 	waitChannel        = make(chan bool, 1)
 	commandBus         = commands.NewWaiterBus(
@@ -45,8 +46,7 @@ var (
 				),
 			),
 		),
-		waitChannel,
-		cond,
+		locker,
 	)
 
 	queryBus   = queries.NewInMemQueryBus()
@@ -54,6 +54,7 @@ var (
 	eventStore = events.NewInMemEventStore()
 	lock       = sync.RWMutex{}
 	cond       = sync.NewCond(&lock)
+	locker     = common_sync.NewChanSync()
 )
 
 func startService() bool {

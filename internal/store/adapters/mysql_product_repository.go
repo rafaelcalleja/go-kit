@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
+	common_sync "github.com/rafaelcalleja/go-kit/internal/common/domain/sync"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
 )
@@ -23,34 +25,23 @@ type ProductRepository struct {
 	executor  transaction.Executor
 	dbTimeout time.Duration
 	mu        *sync.RWMutex
-	cond      *sync.Cond
-	wait      chan bool
+	locker    *common_sync.ChanSync
 }
 
-func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, cond *sync.Cond, wait chan bool) *ProductRepository {
+func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, locker *common_sync.ChanSync) *ProductRepository {
 	return &ProductRepository{
 		executor:  executor,
 		dbTimeout: dbTimeout,
 		mu:        mu,
-		cond:      cond,
-		wait:      wait,
+		locker:    locker,
 	}
 }
 
 func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) error {
-	value := ctx.Value("intx")
-	if len(m.wait) == 0 && value != true {
-		m.cond.L.Lock()
-		for len(m.wait) == 0 {
-			m.cond.Wait()
-		}
-
-		<-m.wait
-		defer func() {
-			m.wait <- true
-			m.cond.L.Unlock()
-			m.cond.Broadcast()
-		}()
+	dispatching := ctx.Value(commands.ContextDispatchingCommand)
+	if true == m.locker.ChanInUse() && nil == dispatching {
+		m.locker.LockAndWait()
+		defer m.locker.Unlock()
 	}
 
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
@@ -76,19 +67,10 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 }
 
 func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
-	value := ctx.Value("intx")
-	if len(m.wait) == 0 && value != true {
-		m.cond.L.Lock()
-		for len(m.wait) == 0 {
-			m.cond.Wait()
-		}
-
-		<-m.wait
-		defer func() {
-			m.wait <- true
-			m.cond.L.Unlock()
-			m.cond.Broadcast()
-		}()
+	dispatching := ctx.Value(commands.ContextDispatchingCommand)
+	if true == m.locker.ChanInUse() && nil == dispatching {
+		m.locker.LockAndWait()
+		defer m.locker.Unlock()
 	}
 
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
