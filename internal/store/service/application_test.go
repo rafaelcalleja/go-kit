@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/pool"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
 	"github.com/rafaelcalleja/go-kit/internal/store/application/command"
 	"github.com/rafaelcalleja/go-kit/uuid"
@@ -33,7 +32,7 @@ var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
 	executor           = transaction.NewExecutor()
-	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, &lock, connPool, cond, waitChannel)
+	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, &lock, cond, waitChannel)
 	inMemBus           = commands.NewInMemCommandBus()
 	waitChannel        = make(chan bool, 1)
 	commandBus         = commands.NewWaiterBus(
@@ -47,8 +46,6 @@ var (
 			),
 		),
 		waitChannel,
-		&lock,
-		connPool,
 		cond,
 	)
 
@@ -57,9 +54,6 @@ var (
 	eventStore = events.NewInMemEventStore()
 	lock       = sync.RWMutex{}
 	cond       = sync.NewCond(&lock)
-	connPool   = pool.NewSemaphore(func() interface{} {
-		return executor
-	})
 )
 
 func startService() bool {

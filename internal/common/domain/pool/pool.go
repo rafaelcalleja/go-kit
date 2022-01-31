@@ -14,10 +14,6 @@ type Pool interface {
 	Release()
 }
 
-type Releaser interface {
-	Release()
-}
-
 type MockPool struct {
 	GetFn     func(ctx context.Context) interface{}
 	ReleaseFn func()

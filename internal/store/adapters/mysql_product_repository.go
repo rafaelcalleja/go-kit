@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/pool"
 	"sync"
 	"time"
 
@@ -25,17 +24,15 @@ type ProductRepository struct {
 	executor  transaction.Executor
 	dbTimeout time.Duration
 	mu        *sync.RWMutex
-	pool      *pool.Semaphore
 	cond      *sync.Cond
 	wait      chan bool
 }
 
-func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, pool *pool.Semaphore, cond *sync.Cond, wait chan bool) *ProductRepository {
+func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, cond *sync.Cond, wait chan bool) *ProductRepository {
 	return &ProductRepository{
 		executor:  executor,
 		dbTimeout: dbTimeout,
 		mu:        mu,
-		pool:      pool,
 		cond:      cond,
 		wait:      wait,
 	}
