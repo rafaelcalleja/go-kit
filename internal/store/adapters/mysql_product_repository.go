@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/huandu/go-sqlbuilder"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	common_sync "github.com/rafaelcalleja/go-kit/internal/common/domain/sync"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/store/domain"
@@ -24,26 +23,19 @@ type sqlProduct struct {
 type ProductRepository struct {
 	executor  transaction.Executor
 	dbTimeout time.Duration
-	mu        *sync.RWMutex
 	locker    *common_sync.ChanSync
+	mux       sync.Mutex
 }
 
-func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, mu *sync.RWMutex, locker *common_sync.ChanSync) *ProductRepository {
+func NewMysqlProductRepository(executor transaction.Executor, dbTimeout time.Duration, locker *common_sync.ChanSync) *ProductRepository {
 	return &ProductRepository{
 		executor:  executor,
 		dbTimeout: dbTimeout,
-		mu:        mu,
 		locker:    locker,
 	}
 }
 
 func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) error {
-	dispatching := ctx.Value(commands.ContextDispatchingCommand)
-	if true == m.locker.ChanInUse() && nil == dispatching {
-		m.locker.LockAndWait()
-		defer m.locker.Unlock()
-	}
-
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 	query, args := productSQLStruct.InsertInto(sqlProductTable, sqlProduct{
 		ID: product.ID().String(),
@@ -67,12 +59,6 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 }
 
 func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
-	dispatching := ctx.Value(commands.ContextDispatchingCommand)
-	if true == m.locker.ChanInUse() && nil == dispatching {
-		m.locker.LockAndWait()
-		defer m.locker.Unlock()
-	}
-
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 
 	sb := productSQLStruct.SelectFrom(sqlProductTable)
