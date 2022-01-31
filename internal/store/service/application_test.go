@@ -32,10 +32,9 @@ import (
 var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
-	executor           = transaction.NewExecutor()
-	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, &lock, locker)
+	executor           = transaction.NewExecutor(locker)
+	productRepository  = adapters.NewMysqlProductRepository(executor, 60*time.Second, locker)
 	inMemBus           = commands.NewInMemCommandBus()
-	waitChannel        = make(chan bool, 1)
 	commandBus         = commands.NewWaiterBus(
 		commands.NewTransactionalCommandBus(
 			inMemBus,
@@ -52,8 +51,6 @@ var (
 	queryBus   = queries.NewInMemQueryBus()
 	eventBus   = events.NewInMemoryEventBus()
 	eventStore = events.NewInMemEventStore()
-	lock       = sync.RWMutex{}
-	cond       = sync.NewCond(&lock)
 	locker     = common_sync.NewChanSync()
 )
 
@@ -69,8 +66,6 @@ func startService() bool {
 	if !ok {
 		log.Println("Timed out waiting for store Grpc to come up")
 	}
-
-	waitChannel <- true
 
 	return ok
 }

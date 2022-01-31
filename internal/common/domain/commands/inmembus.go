@@ -72,7 +72,7 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
 }
 
 func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) error {
-	return b.pipeline.Handle(handler, context.WithValue(ctx, ContextDispatchingCommand, cmd), cmd)
+	return b.pipeline.Handle(handler, context.WithValue(ctx, ContextDispatchingCommand.String(), cmd), cmd)
 }
 
 func (b *CommandBus) UseMiddleware(middleware ...middleware.Middleware) {
