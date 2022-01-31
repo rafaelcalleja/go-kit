@@ -86,9 +86,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestChannels(t *testing.T) {
-	wait := waitChannel
-	conn, _ := mysql_tests.NewMySQLConnection()
-	_ = common_adapters.NewTransactionInitializerExecutorChanDb(conn, wait, executor)
 	ctx := context.Background()
 	u := uuid.New()
 	client := tests.NewStoreGrpcClient(t, grpcAddr)
