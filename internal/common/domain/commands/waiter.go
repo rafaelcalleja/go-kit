@@ -2,7 +2,6 @@ package commands
 
 import (
 	"context"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/pool"
 	"sync"
 )
 
@@ -10,17 +9,13 @@ import (
 type WaiterBus struct {
 	commandBus Bus
 	wait       chan bool
-	mu         *sync.RWMutex
-	sem        *pool.Semaphore
 	cond       *sync.Cond
 }
 
-func NewWaiterBus(commandBus Bus, wait chan bool, mu *sync.RWMutex, sem *pool.Semaphore, cond *sync.Cond) *WaiterBus {
+func NewWaiterBus(commandBus Bus, wait chan bool, cond *sync.Cond) *WaiterBus {
 	return &WaiterBus{
 		commandBus: commandBus,
 		wait:       wait,
-		mu:         mu,
-		sem:        sem,
 		cond:       cond,
 	}
 }
