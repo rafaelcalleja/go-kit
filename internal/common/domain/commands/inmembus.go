@@ -6,16 +6,6 @@ import (
 	"sync"
 )
 
-type commandBusKey string
-
-func (c commandBusKey) String() string {
-	return "command_bus_" + string(c)
-}
-
-var (
-	ContextDispatchingCommand = commandBusKey("dispatching")
-)
-
 // CommandBus is an in-memory implementation of the commands.Bus.
 type CommandBus struct {
 	handlers map[Type]Handler
@@ -72,7 +62,7 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
 }
 
 func (b *CommandBus) handle(handler Handler, ctx context.Context, cmd Command) error {
-	return b.pipeline.Handle(handler, context.WithValue(ctx, ContextDispatchingCommand.String(), cmd), cmd)
+	return b.pipeline.Handle(handler, ctx, cmd)
 }
 
 func (b *CommandBus) UseMiddleware(middleware ...middleware.Middleware) {
