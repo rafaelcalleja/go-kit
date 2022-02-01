@@ -33,33 +33,29 @@ func (e *ConnectionSqlShared) replace(i transaction.Connection) transaction.Conn
 }
 
 func (e *ConnectionSqlShared) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	if e.locker.CWait(ctx) {
-		defer e.locker.Unlock()
-	}
+	e.locker.CWait(ctx)
+	defer e.locker.CUnlock()
 
 	return e.conn.ExecContext(ctx, query, args...)
 }
 
 func (e *ConnectionSqlShared) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
-	if e.locker.CWait(ctx) {
-		defer e.locker.Unlock()
-	}
+	e.locker.CWait(ctx)
+	defer e.locker.CUnlock()
 
 	return e.conn.PrepareContext(ctx, query)
 }
 
 func (e *ConnectionSqlShared) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	if e.locker.CWait(ctx) {
-		defer e.locker.Unlock()
-	}
+	e.locker.CWait(ctx)
+	defer e.locker.CUnlock()
 
 	return e.conn.QueryContext(ctx, query, args...)
 }
 
 func (e *ConnectionSqlShared) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	if e.locker.CWait(ctx) {
-		defer e.locker.Unlock()
-	}
+	e.locker.CWait(ctx)
+	defer e.locker.CUnlock()
 
 	return e.conn.QueryRowContext(ctx, query, args...)
 }

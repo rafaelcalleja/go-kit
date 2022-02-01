@@ -20,7 +20,7 @@ func NewWaiterBus(commandBus Bus, locker *sync.ChanSync) *WaiterBus {
 
 // Dispatch implements the commands.Bus interface.
 func (b *WaiterBus) Dispatch(ctx context.Context, cmd Command) error {
-	ctx = b.locker.CLock(ctx)
+	ctx = b.locker.Lock(ctx)
 	defer b.locker.Unlock()
 
 	return b.commandBus.Dispatch(ctx, cmd)
