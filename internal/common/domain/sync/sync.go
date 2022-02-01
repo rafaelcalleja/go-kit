@@ -59,7 +59,7 @@ func (c *ChanSync) lockAndWait() {
 
 func (c *ChanSync) Lock(ctx context.Context) context.Context {
 	defer c.lock()
-	return context.WithValue(ctx, ctxSyncKey.String(), true)
+	return context.WithValue(ctx, ctxSyncKey.String(), c)
 }
 
 func (c *ChanSync) CWait(ctx context.Context) {
