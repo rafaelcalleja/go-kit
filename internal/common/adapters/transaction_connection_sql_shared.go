@@ -33,9 +33,7 @@ func (e *ConnectionSqlShared) replace(i transaction.Connection) transaction.Conn
 }
 
 func (e *ConnectionSqlShared) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	dispatching := ctx.Value("command_bus_dispatching")
-	if true == e.locker.ChanInUse() && nil == dispatching {
-		e.locker.LockAndWait()
+	if e.locker.CWait(ctx) {
 		defer e.locker.Unlock()
 	}
 
@@ -43,9 +41,7 @@ func (e *ConnectionSqlShared) ExecContext(ctx context.Context, query string, arg
 }
 
 func (e *ConnectionSqlShared) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
-	dispatching := ctx.Value("command_bus_dispatching")
-	if true == e.locker.ChanInUse() && nil == dispatching {
-		e.locker.LockAndWait()
+	if e.locker.CWait(ctx) {
 		defer e.locker.Unlock()
 	}
 
@@ -53,9 +49,7 @@ func (e *ConnectionSqlShared) PrepareContext(ctx context.Context, query string) 
 }
 
 func (e *ConnectionSqlShared) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	dispatching := ctx.Value("command_bus_dispatching")
-	if true == e.locker.ChanInUse() && nil == dispatching {
-		e.locker.LockAndWait()
+	if e.locker.CWait(ctx) {
 		defer e.locker.Unlock()
 	}
 
@@ -63,9 +57,7 @@ func (e *ConnectionSqlShared) QueryContext(ctx context.Context, query string, ar
 }
 
 func (e *ConnectionSqlShared) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	dispatching := ctx.Value("command_bus_dispatching")
-	if true == e.locker.ChanInUse() && nil == dispatching {
-		e.locker.LockAndWait()
+	if e.locker.CWait(ctx) {
 		defer e.locker.Unlock()
 	}
 

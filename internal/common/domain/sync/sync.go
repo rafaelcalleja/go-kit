@@ -1,7 +1,18 @@
 package sync
 
 import (
+	"context"
 	base "sync"
+)
+
+type syncKey string
+
+func (c syncKey) String() string {
+	return "sync_key_" + string(c)
+}
+
+var (
+	ctxSyncKey = syncKey("locking")
 )
 
 type ChanSync struct {
@@ -41,4 +52,19 @@ func (c *ChanSync) LockAndWait() {
 	}
 
 	<-c.wait
+}
+
+func (c *ChanSync) CLock(ctx context.Context) context.Context {
+	defer c.Lock()
+	return context.WithValue(ctx, ctxSyncKey.String(), true)
+}
+
+func (c *ChanSync) CWait(ctx context.Context) bool {
+	locked := ctx.Value(ctxSyncKey.String())
+	if true == c.ChanInUse() && nil == locked {
+		c.LockAndWait()
+		return true
+	}
+
+	return false
 }
