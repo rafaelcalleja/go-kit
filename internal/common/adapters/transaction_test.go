@@ -2,24 +2,22 @@ package adapters
 
 import (
 	"context"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
-	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewTransactionInitializerDb(t *testing.T) {
-	connection, _ := mysql_tests.NewMySQLConnection()
-
 	s := transaction.NewTransactionalSession(
-		NewTransactionInitializerDb(connection),
+		transaction.NewMockInitializer(),
 	)
 
 	ctx := context.Background()
 
 	called := false
 
-	_ = s.ExecuteAtomically(ctx, func() error {
+	_ = s.ExecuteAtomically(ctx, func(_ context.Context) error {
 		called = true
 
 		return nil

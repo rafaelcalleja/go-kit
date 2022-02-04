@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
 	"github.com/rafaelcalleja/go-kit/internal/store/application/command"
 	"github.com/rafaelcalleja/go-kit/uuid"
@@ -13,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
@@ -32,22 +32,17 @@ import (
 var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
-	connection         = common_adapters.NewConnectionPoolSql(poolMap, mysqlConnection)
+	connection         = transaction.NewTxPool(mysqlConnection)
 
 	productRepository = adapters.NewMysqlProductRepository(connection, 60*time.Second)
 	inMemBus          = commands.NewInMemCommandBus()
-
-	poolMap = &sync.Map{}
 
 	commandBus = commands.NewWaiterBus(
 		commands.NewTransactionalCommandBus(
 			inMemBus,
 			transaction.NewTransactionalSession(
 				transaction.NewChainTxInitializer(
-					common_adapters.NewTransactionConnectionPoolInitializer(
-						poolMap,
-						connection.(*common_adapters.ConnectionPoolSql),
-					),
+					common_adapters.NewConnectionPoolInitializerSql(connection),
 					events.NewMementoTx(eventStore),
 				),
 			),
