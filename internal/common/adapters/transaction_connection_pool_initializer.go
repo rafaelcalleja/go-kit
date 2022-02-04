@@ -11,12 +11,13 @@ import (
 
 type TransactionConnectionPoolInitializer struct {
 	mu         sync.Mutex
-	connection *ConnectionSql
+	connection *ConnectionPoolSql
 	tx         *sql.Tx
 	pool       *sync.Map
+	txId       uuid.UUID
 }
 
-func NewTransactionConnectionPoolInitializer(pool *sync.Map, connection *ConnectionSql) *TransactionConnectionPoolInitializer {
+func NewTransactionConnectionPoolInitializer(pool *sync.Map, connection *ConnectionPoolSql) *TransactionConnectionPoolInitializer {
 	return &TransactionConnectionPoolInitializer{
 		connection: connection,
 		pool:       pool,
@@ -38,11 +39,12 @@ func (i *TransactionConnectionPoolInitializer) Begin(ctx context.Context) (trans
 		txId = uuid.New().Create()
 	}
 
-	i.pool.Store(txId, tx)
+	i.txId = txId.(uuid.UUID)
+	i.pool.Store(i.txId, tx)
 
 	i.tx = tx
 
-	return tx, err
+	return i, err
 }
 
 func (i *TransactionConnectionPoolInitializer) Rollback() (err error) {
@@ -50,6 +52,7 @@ func (i *TransactionConnectionPoolInitializer) Rollback() (err error) {
 	defer i.mu.Unlock()
 	defer func() {
 		i.tx = nil
+		i.pool.Delete(i.txId)
 	}()
 
 	return i.tx.Rollback()
@@ -60,6 +63,7 @@ func (i *TransactionConnectionPoolInitializer) Commit() error {
 	defer i.mu.Unlock()
 	defer func() {
 		i.tx = nil
+		i.pool.Delete(i.txId)
 	}()
 
 	return i.tx.Commit()
