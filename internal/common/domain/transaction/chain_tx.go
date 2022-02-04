@@ -1,5 +1,9 @@
 package transaction
 
+import (
+	"context"
+)
+
 type ChainTxInitializer struct {
 	chain []Initializer
 }
@@ -10,11 +14,11 @@ func NewChainTxInitializer(initializer ...Initializer) *ChainTxInitializer {
 	}
 }
 
-func (c ChainTxInitializer) Begin() (Transaction, error) {
+func (c ChainTxInitializer) Begin(ctx context.Context) (Transaction, error) {
 	txs := make([]Transaction, len(c.chain))
 
 	for k, initializer := range c.chain {
-		t, err := initializer.Begin()
+		t, err := initializer.Begin(ctx)
 
 		if err != nil {
 			return &ChainTx{}, nil

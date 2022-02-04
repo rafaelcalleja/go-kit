@@ -1,17 +1,19 @@
 package transaction
 
+import "context"
+
 type MockInitializer struct {
-	BeginFn func() (tx Transaction, err error)
+	BeginFn func(ctx context.Context) (tx Transaction, err error)
 }
 
 func NewMockInitializer() MockInitializer {
 	return MockInitializer{
-		BeginFn: func() (tx Transaction, err error) { return NewMockTransaction(), nil },
+		BeginFn: func(ctx context.Context) (tx Transaction, err error) { return NewMockTransaction(), nil },
 	}
 }
 
-func (m MockInitializer) Begin() (tx Transaction, err error) {
-	return m.BeginFn()
+func (m MockInitializer) Begin(ctx context.Context) (tx Transaction, err error) {
+	return m.BeginFn(ctx)
 }
 
 type MockTransaction struct {
@@ -35,15 +37,15 @@ func (m MockTransaction) Commit() error {
 }
 
 type MockTransactionalSession struct {
-	ExecuteAtomicallyFn func(Operation) error
+	ExecuteAtomicallyFn func(context.Context, Operation) error
 }
 
 func NewTransactionalSessionMock() MockTransactionalSession {
 	return MockTransactionalSession{
-		ExecuteAtomicallyFn: func(operation Operation) error { return nil },
+		ExecuteAtomicallyFn: func(ctx context.Context, operation Operation) error { return nil },
 	}
 }
 
-func (m MockTransactionalSession) ExecuteAtomically(operation Operation) error {
-	return m.ExecuteAtomicallyFn(operation)
+func (m MockTransactionalSession) ExecuteAtomically(ctx context.Context, operation Operation) error {
+	return m.ExecuteAtomicallyFn(ctx, operation)
 }

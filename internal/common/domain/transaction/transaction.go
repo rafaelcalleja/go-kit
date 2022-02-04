@@ -6,7 +6,7 @@ import (
 )
 
 type Initializer interface {
-	Begin() (Transaction, error)
+	Begin(ctx context.Context) (Transaction, error)
 }
 
 type Transaction interface {

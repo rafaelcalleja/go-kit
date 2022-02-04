@@ -14,7 +14,7 @@ func TestTransactionalBus_Dispatch(t *testing.T) {
 	ctx := context.Background()
 
 	calledExecuteAtomically := false
-	sessionMock.ExecuteAtomicallyFn = func(operation transaction.Operation) error {
+	sessionMock.ExecuteAtomicallyFn = func(ctx context.Context, operation transaction.Operation) error {
 		calledExecuteAtomically = true
 		return operation()
 	}
@@ -41,7 +41,7 @@ func TestTransactionalBus_Register(t *testing.T) {
 	commandBusMock := NewMockCommandBus()
 
 	calledExecuteAtomically := false
-	sessionMock.ExecuteAtomicallyFn = func(operation transaction.Operation) error {
+	sessionMock.ExecuteAtomicallyFn = func(ctx context.Context, operation transaction.Operation) error {
 		calledExecuteAtomically = true
 		return operation()
 	}

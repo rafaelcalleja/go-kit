@@ -2,31 +2,36 @@ package commands
 
 import (
 	"context"
-
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
+)
+
+var (
+	ctxTxBusDispatchingKey = busKey("tx_dispatching")
 )
 
 // TransactionalBus is an implementation of the commands.Handler.
 type TransactionalBus struct {
-	commandBus Bus
-	session    transaction.TransactionalSession
+	Bus
+	session transaction.TransactionalSession
 }
 
 func NewTransactionalCommandBus(commandBus Bus, session transaction.TransactionalSession) *TransactionalBus {
 	return &TransactionalBus{
-		commandBus: commandBus,
-		session:    session,
+		Bus:     commandBus,
+		session: session,
 	}
 }
 
 // Dispatch implements the commands.Bus interface.
 func (b *TransactionalBus) Dispatch(ctx context.Context, cmd Command) error {
-	return b.session.ExecuteAtomically(func() error {
-		return b.commandBus.Dispatch(ctx, cmd)
+	ctx = context.WithValue(ctx, ctxTxBusDispatchingKey, cmd)
+
+	return b.session.ExecuteAtomically(ctx, func(ctx context.Context) error {
+		return b.Bus.Dispatch(ctx, cmd)
 	})
 }
 
 // Register implements the commands.Bus interface.
 func (b *TransactionalBus) Register(cmdType Type, handler Handler) {
-	b.commandBus.Register(cmdType, handler)
+	b.Bus.Register(cmdType, handler)
 }

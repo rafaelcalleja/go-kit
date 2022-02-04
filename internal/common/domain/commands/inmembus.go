@@ -2,8 +2,20 @@ package commands
 
 import (
 	"context"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 	"sync"
+
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
+	"github.com/rafaelcalleja/go-kit/uuid"
+)
+
+type busKey string
+
+func (c busKey) String() string {
+	return "bus_key_" + string(c)
+}
+
+var (
+	ctxBusIdKey = busKey("bus_id")
 )
 
 // CommandBus is an in-memory implementation of the commands.Bus.
@@ -52,6 +64,8 @@ func NewInMemCommandBus() Bus {
 func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	ctx = context.WithValue(ctx, ctxBusIdKey.String(), uuid.New().Create())
 
 	handler, ok := b.handlers[cmd.Type()]
 	if !ok {

@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"github.com/stretchr/testify/require"
 	"sync"
 	"testing"
@@ -12,7 +13,7 @@ func TestInMemTransaction_Rollback(t *testing.T) {
 	mockEvent := NewMockEvent("A")
 	expected := session.GetEvents()
 
-	tx, _ := session.Begin()
+	tx, _ := session.Begin(context.Background())
 
 	session.AddEvent(mockEvent)
 
@@ -26,7 +27,7 @@ func TestInMemTransaction_Success(t *testing.T) {
 	session := NewInMemEventTransaction(nil)
 	mockEvent := NewMockEvent("A")
 
-	tx, _ := session.Begin()
+	tx, _ := session.Begin(context.Background())
 
 	session.AddEvent(mockEvent)
 	expected := session.GetEvents()
@@ -42,12 +43,12 @@ func TestInMemTransaction_MultipleTransaction_Rollback(t *testing.T) {
 	mockEventExpected := NewMockEvent("A")
 	mockEventCancel := NewMockEvent("B")
 
-	tx, _ := session.Begin()
+	tx, _ := session.Begin(context.Background())
 
 	session.AddEvent(mockEventExpected)
 	expected := session.GetEvents()
 
-	tx2, _ := session.Begin()
+	tx2, _ := session.Begin(context.Background())
 	session.AddEvent(mockEventCancel)
 
 	_ = tx2.Rollback()
@@ -62,10 +63,10 @@ func TestInMemTransaction_MultipleTransaction_Success(t *testing.T) {
 	session := NewInMemEventTransaction(nil)
 	mockEvent := NewMockEvent("A")
 
-	tx, _ := session.Begin()
+	tx, _ := session.Begin(context.Background())
 	session.AddEvent(mockEvent)
 
-	tx2, _ := session.Begin()
+	tx2, _ := session.Begin(context.Background())
 	session.AddEvent(mockEvent)
 
 	expected := session.GetEvents()
@@ -89,12 +90,12 @@ func TestInMemTransaction_Concurrent_Success(t *testing.T) {
 	}
 
 	session := NewInMemEventTransaction(nil)
-	tx, _ := session.Begin()
+	tx, _ := session.Begin(context.Background())
 
 	var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
-		tx2, _ := session.Begin()
+		tx2, _ := session.Begin(context.Background())
 		session.AddEvent(WrongEvent)
 		_ = tx2.Commit()
 		defer wg.Done()

@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
@@ -20,8 +21,8 @@ func NewTransactionInitializerDb(db *sql.DB) TransactionInitializerDb {
 	}
 }
 
-func (i TransactionInitializerDb) Begin() (transaction.Transaction, error) {
-	tx, err := i.db.Begin()
+func (i TransactionInitializerDb) Begin(ctx context.Context) (transaction.Transaction, error) {
+	tx, err := i.db.BeginTx(ctx, nil)
 
 	t := transaction.Transaction(tx)
 

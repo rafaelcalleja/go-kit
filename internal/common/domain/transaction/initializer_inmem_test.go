@@ -26,7 +26,7 @@ func TestInMemTransaction_Rollback(t *testing.T) {
 	ctx = context.WithValue(ctx, "repository", NewCloneable(&demo, &actual))
 
 	transaction := NewInitializerInMem(ctx)
-	tx, err := transaction.Begin()
+	tx, err := transaction.Begin(ctx)
 	demo["foo"] = "foo"
 
 	require.NoError(t, err)
@@ -54,7 +54,7 @@ func TestInMemTransaction_Success(t *testing.T) {
 	ctx = context.WithValue(ctx, "repository", NewCloneable(&demo, &actual))
 
 	transaction := NewInitializerInMem(ctx)
-	tx, err := transaction.Begin()
+	tx, err := transaction.Begin(ctx)
 	demo["foo"] = "foo"
 
 	require.NoError(t, err)

@@ -2,8 +2,10 @@ package command
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
@@ -48,4 +50,12 @@ func (service CreateProductHandler) Handle(ctx context.Context, command commands
 	}
 
 	return service.eventBus.Publish(ctx, product.PullEvents())
+}
+func (service CreateProductHandler) WithTrx(tx *sql.Tx) interface{} {
+	repository := service.repository.(transaction.TxRepository).WithTrx(tx)
+
+	return NewCreateProductHandler(
+		repository.(domain.ProductRepository),
+		service.eventBus,
+	)
 }

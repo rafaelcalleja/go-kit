@@ -59,7 +59,7 @@ func (c CloneableFunc) Clone() interface{} {
 	return fn
 }
 
-func (i *InMemTransaction) Begin() (Transaction, error) {
+func (i *InMemTransaction) Begin(_ context.Context) (Transaction, error) {
 
 	cloneable := i.ctx.Value("repository").(CloneableFunc)
 
