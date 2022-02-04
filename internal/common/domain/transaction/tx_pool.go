@@ -14,7 +14,7 @@ type txFromPool struct {
 }
 
 func (t *txFromPool) GetConnection(ctx context.Context) Connection {
-	txId := ctx.Value(CtxSessionIdKey.String())
+	txId := ctx.Value(ctxSessionIdKey.String())
 
 	if nil == txId {
 		return t.db
@@ -57,7 +57,7 @@ func (t *txFromPool) GetTransaction(txId TxId) Transaction {
 }
 
 func (t *txFromPool) StoreTransaction(ctx context.Context, transaction Transaction) TxId {
-	txId := ctx.Value(CtxSessionIdKey.String())
+	txId := ctx.Value(ctxSessionIdKey.String())
 
 	if nil == txId {
 		idVo, _ := NewRandomTxId()
