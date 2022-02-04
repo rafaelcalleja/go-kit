@@ -3,6 +3,7 @@ package adapters
 import (
 	"context"
 	"errors"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"testing"
 	"time"
 
@@ -21,12 +22,13 @@ func TestProductRepository_Save_Err(t *testing.T) {
 	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
-	sqlMock.ExpectExec(
+	sqlMock.ExpectPrepare(
 		"INSERT INTO products (id) VALUES (?)").
+		ExpectExec().
 		WithArgs(productId).
 		WillReturnError(errors.New("something-failed"))
 
-	repo := NewMysqlProductRepository(db, 1*time.Millisecond)
+	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 1*time.Millisecond)
 
 	err = repo.Save(context.Background(), product)
 
@@ -43,12 +45,13 @@ func TestProductRepository_Save_Success(t *testing.T) {
 	db, sqlMock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	require.NoError(t, err)
 
-	sqlMock.ExpectExec(
+	sqlMock.ExpectPrepare(
 		"INSERT INTO products (id) VALUES (?)").
+		ExpectExec().
 		WithArgs(productId).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	repo := NewMysqlProductRepository(db, 1*time.Millisecond)
+	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 1*time.Millisecond)
 
 	err = repo.Save(context.Background(), product)
 
@@ -73,7 +76,7 @@ func TestProductRepository_Of_Success(t *testing.T) {
 		WithArgs(productId).
 		WillReturnRows(rows)
 
-	repo := NewMysqlProductRepository(db, 60*time.Second)
+	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 60*time.Second)
 
 	_, err = repo.Of(context.Background(), productIdVO)
 
@@ -95,7 +98,7 @@ func TestProductRepository_Of_Empty(t *testing.T) {
 		WithArgs(productId).
 		WillReturnRows(sqlmock.NewRows([]string{}))
 
-	repo := NewMysqlProductRepository(db, 60*time.Second)
+	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 60*time.Second)
 
 	_, err = repo.Of(context.Background(), productIdVO)
 

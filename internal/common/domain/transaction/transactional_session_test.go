@@ -9,14 +9,14 @@ import (
 
 func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 	ctx := context.Background()
-	nilOperation := func() error { return nil }
+	nilOperation := func(context.Context) error { return nil }
 	errInOperation := errors.New("mock operation")
 
-	errorOperation := func() error {
+	errorOperation := func(context.Context) error {
 		return errInOperation
 	}
 
-	panicOperation := func() error {
+	panicOperation := func(context.Context) error {
 		panic("mock panic")
 	}
 
@@ -25,7 +25,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockErr := errors.New("mock tx")
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return NewMockTransaction(), mockErr
 		}
 
@@ -42,7 +42,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock commit")
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -64,7 +64,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock rollback")
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -84,7 +84,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -111,7 +111,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -140,7 +140,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -169,7 +169,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -186,7 +186,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(ctx, func() error {
+		err := session.ExecuteAtomically(ctx, func(_ context.Context) error {
 			panic(errors.New("error in panic"))
 		})
 
@@ -201,7 +201,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			panic("panic from tx begin")
 		}
 
@@ -216,7 +216,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -235,7 +235,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
@@ -253,7 +253,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 
-		mockInitializer.BeginFn = func() (tx Transaction, err error) {
+		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return nil, nil
 		}
 

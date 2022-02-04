@@ -6,15 +6,17 @@ import (
 
 // EventBusMock is a mock implementation of the events.Bus.
 type EventBusMock struct {
-	PublishFn   func(ctx context.Context, events []Event) error
-	SubscribeFn func(handler Handler)
+	PublishFn     func(ctx context.Context, events []Event) error
+	SubscribeFn   func(handler ...*Handler)
+	UnsubscribeFn func(handler ...*Handler)
 }
 
 // NewMockEventBus initializes a new EventBus.
 func NewMockEventBus() *EventBusMock {
 	return &EventBusMock{
-		PublishFn:   func(ctx context.Context, events []Event) error { return nil },
-		SubscribeFn: func(handler Handler) {},
+		PublishFn:     func(ctx context.Context, events []Event) error { return nil },
+		SubscribeFn:   func(handler ...*Handler) {},
+		UnsubscribeFn: func(handler ...*Handler) {},
 	}
 }
 
@@ -24,8 +26,13 @@ func (b *EventBusMock) Publish(ctx context.Context, events []Event) error {
 }
 
 // Subscribe implements the events.Bus interface.
-func (b *EventBusMock) Subscribe(handler Handler) {
-	b.SubscribeFn(handler)
+func (b *EventBusMock) Subscribe(handler ...*Handler) {
+	b.SubscribeFn(handler...)
+}
+
+// Unsubscribe implements the events.Bus interface.
+func (b *EventBusMock) Unsubscribe(handler ...*Handler) {
+	b.UnsubscribeFn(handler...)
 }
 
 const MockEventType Type = "data.mocks"
