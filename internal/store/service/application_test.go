@@ -17,7 +17,6 @@ import (
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/commands"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/events"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/queries"
-	common_sync "github.com/rafaelcalleja/go-kit/internal/common/domain/sync"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/common/genproto/store"
 	"github.com/rafaelcalleja/go-kit/internal/common/server"
@@ -37,23 +36,19 @@ var (
 	productRepository = adapters.NewMysqlProductRepository(connection, 60*time.Second)
 	inMemBus          = commands.NewInMemCommandBus()
 
-	commandBus = commands.NewWaiterBus(
-		commands.NewTransactionalCommandBus(
-			inMemBus,
-			transaction.NewTransactionalSession(
-				transaction.NewChainTxInitializer(
-					common_adapters.NewConnectionPoolInitializerSql(connection),
-					events.NewMementoTx(eventStore),
-				),
+	commandBus = commands.NewTransactionalCommandBus(
+		inMemBus,
+		transaction.NewTransactionalSession(
+			transaction.NewChainTxInitializer(
+				common_adapters.NewConnectionPoolInitializerSql(connection),
+				events.NewMementoTx(eventStore),
 			),
 		),
-		locker,
 	)
 
 	queryBus   = queries.NewInMemQueryBus()
 	eventBus   = events.NewInMemoryEventBus()
 	eventStore = events.NewInMemEventStore()
-	locker     = common_sync.NewChanSync()
 )
 
 func startService() bool {

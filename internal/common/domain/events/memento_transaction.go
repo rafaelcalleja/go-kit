@@ -2,52 +2,68 @@ package events
 
 import (
 	"context"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"sync"
+
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 type MementoTx struct {
-	originator *originator
-	memento    *memento
-	store      *EventStoreInMem
-	mu         sync.Mutex
+	backup []Event
+	store  *EventStoreInMem
+	mu     sync.Mutex
+	mux    sync.Mutex
 }
 
 func NewMementoTx(store *EventStoreInMem) *MementoTx {
-	events := store.events
-
-	for k, v := range store.events {
-		events[k] = v
+	m := &MementoTx{
+		store: store,
 	}
 
-	originator := &originator{
-		events,
+	m.doBackup()
+
+	return m
+}
+
+func (o *MementoTx) doBackup() {
+	o.mux.Lock()
+	defer o.mux.Unlock()
+
+	backup := make([]Event, len(o.store.events))
+
+	copy(backup, o.store.events)
+
+	o.backup = backup
+}
+
+func (o *MementoTx) doRestore() {
+	o.mux.Lock()
+	defer o.mux.Unlock()
+
+	restore := make([]Event, len(o.backup))
+
+	copy(restore, o.backup)
+
+	o.backup = make([]Event, 0)
+
+	o.store.events = make([]Event, 0)
+
+	for _, v := range restore {
+		o.store.Append(v)
 	}
 
-	return &MementoTx{
-		originator: originator,
-		store:      store,
-	}
+	o.store.events = restore
 }
 
 func (o *MementoTx) Begin(_ context.Context) (transaction.Transaction, error) {
 	o.mu.Lock()
-	o.memento = o.originator.createMemento(o.store.events)
+	o.doBackup()
 
 	return transaction.Transaction(o), nil
 }
 
 func (o *MementoTx) Rollback() error {
 	defer o.mu.Unlock()
-	o.originator.restoreMemento(o.memento)
-	o.memento = nil
-
-	o.store.events = make([]Event, 0)
-
-	for _, v := range o.originator.events {
-		o.store.Append(v)
-	}
-
+	o.doRestore()
 	return nil
 }
 
