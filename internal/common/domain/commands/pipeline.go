@@ -25,17 +25,17 @@ func (p *DefaultPipeline) Add(middlewares ...middleware.Middleware) {
 func (p DefaultPipeline) Handle(handler Handler, ctx context.Context, cmd Command) error {
 	pipeline := middleware.NewPipeline()
 
-	closure := func() error {
+	closure := func(ctx context.Context) error {
 		return handler.Handle(ctx, cmd)
 	}
 
-	pipeline.Add(middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
-		setPipelineContext(handler, ctx, cmd, middlewareCtx)
+	pipeline.Add(middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, ctx context.Context, closure middleware.Closure) error {
+		ctx = withPipelineContext(ctx, handler, cmd)
 
-		return stack.Next().Handle(stack, middlewareCtx)
+		return stack.Next().Handle(stack, ctx, closure)
 	}))
 
 	pipeline.Add(p.middlewares...)
 
-	return pipeline.Handle(middleware.ContextWith(closure))
+	return pipeline.Handle(ctx, closure)
 }

@@ -15,8 +15,8 @@ func NewMiddlewareTransactional(session transaction.TransactionalSession) Transa
 	}
 }
 
-func (t Transactional) Handle(stack StackMiddleware, ctx Context) error {
-	return t.session.ExecuteAtomically(GetDefaultContext(ctx).Ctx, func(_ context.Context) error {
-		return stack.Next().Handle(stack, ctx)
+func (t Transactional) Handle(stack StackMiddleware, ctx context.Context, closure Closure) error {
+	return t.session.ExecuteAtomically(ctx, func(ctx context.Context) error {
+		return stack.Next().Handle(stack, ctx, closure)
 	})
 }
