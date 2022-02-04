@@ -1,12 +1,14 @@
 package transaction
 
 import (
+	"context"
 	"errors"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
+	ctx := context.Background()
 	nilOperation := func() error { return nil }
 	errInOperation := errors.New("mock operation")
 
@@ -28,7 +30,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(nilOperation)
+		err := session.ExecuteAtomically(ctx, nilOperation)
 		require.Error(t, err)
 		require.Error(t, errors.Unwrap(err))
 		require.ErrorIs(t, mockErr, errors.Unwrap(err))
@@ -49,7 +51,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(nilOperation)
+		err := session.ExecuteAtomically(ctx, nilOperation)
 
 		require.Error(t, err)
 		require.Error(t, errors.Unwrap(err))
@@ -71,7 +73,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(errorOperation)
+		err := session.ExecuteAtomically(ctx, errorOperation)
 
 		require.Error(t, err)
 		require.Error(t, errors.Unwrap(err))
@@ -99,7 +101,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(nilOperation)
+		err := session.ExecuteAtomically(ctx, nilOperation)
 		require.NoError(t, err)
 		require.True(t, calledCommit)
 		require.False(t, calledRollback)
@@ -126,7 +128,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(errorOperation)
+		err := session.ExecuteAtomically(ctx, errorOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, errInOperation, err)
 
@@ -155,7 +157,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(panicOperation)
+		err := session.ExecuteAtomically(ctx, panicOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrPanicInOperation, errors.Unwrap(err))
 
@@ -184,7 +186,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(func() error {
+		err := session.ExecuteAtomically(ctx, func() error {
 			panic(errors.New("error in panic"))
 		})
 
@@ -204,7 +206,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(nilOperation)
+		err := session.ExecuteAtomically(ctx, nilOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrPanicInOperation, errors.Unwrap(err))
 	})
@@ -223,7 +225,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(nilOperation)
+		err := session.ExecuteAtomically(ctx, nilOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrPanicInTransaction, errors.Unwrap(err))
 	})
@@ -242,7 +244,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(errorOperation)
+		err := session.ExecuteAtomically(ctx, errorOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrPanicInTransaction, errors.Unwrap(err))
 	})
@@ -256,7 +258,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		}
 
 		session := NewTransactionalSession(mockInitializer)
-		err := session.ExecuteAtomically(errorOperation)
+		err := session.ExecuteAtomically(ctx, errorOperation)
 		require.Error(t, err)
 		require.ErrorIs(t, ErrInitializerNilTransaction, err)
 	})

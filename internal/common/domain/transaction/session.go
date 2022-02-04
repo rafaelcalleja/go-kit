@@ -1,7 +1,9 @@
 package transaction
 
-type Operation func() error
+import "context"
+
+type Operation func(context.Context) error
 
 type TransactionalSession interface {
-	ExecuteAtomically(Operation) error
+	ExecuteAtomically(context.Context, Operation) error
 }

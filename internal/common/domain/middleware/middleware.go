@@ -1,5 +1,7 @@
 package middleware
 
+import "context"
+
 type Middleware interface {
 	Handle(stack StackMiddleware, ctx Context) error
 }
@@ -30,4 +32,22 @@ func (p Pipeline) Handle(ctx Context) error {
 	clone := p.stack.Clone()
 
 	return clone.Next().Handle(&clone, ctx)
+}
+
+const ctxDefaultContext string = "pipeline_context"
+
+type DefaultContext struct {
+	Ctx context.Context
+}
+
+func GetDefaultContext(context Context) DefaultContext {
+	return context.Get(ctxDefaultContext).(DefaultContext)
+}
+
+func setDefaultContext(ctx context.Context, context Context) {
+	pipelineContext := DefaultContext{
+		ctx,
+	}
+
+	context.Set(ctxDefaultContext, pipelineContext)
 }

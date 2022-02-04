@@ -2,6 +2,7 @@ package events
 
 import (
 	"bytes"
+	"context"
 	"runtime/debug"
 	"strconv"
 	"sync"
@@ -51,7 +52,7 @@ func (o *InMemEventTransaction) gid() int {
 	return gid
 }
 
-func (o *InMemEventTransaction) Begin() (transaction.Transaction, error) {
+func (o *InMemEventTransaction) Begin(_ context.Context) (transaction.Transaction, error) {
 	gid := o.gid()
 
 	if _, ok := o.locker[gid]; !ok {

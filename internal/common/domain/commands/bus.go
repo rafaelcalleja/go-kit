@@ -1,6 +1,8 @@
 package commands
 
-import "context"
+import (
+	"context"
+)
 
 // Bus defines the expected behaviour from a command bus.
 type Bus interface {

@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"sync"
 )
@@ -29,7 +30,7 @@ func NewMementoTx(store *EventStoreInMem) *MementoTx {
 	}
 }
 
-func (o *MementoTx) Begin() (transaction.Transaction, error) {
+func (o *MementoTx) Begin(_ context.Context) (transaction.Transaction, error) {
 	o.mu.Lock()
 	o.memento = o.originator.createMemento(o.store.events)
 

@@ -16,14 +16,12 @@ type TransactionPool struct {
 	pool    Pool
 	txCount int
 	mu      sync.Mutex
-	ctx     context.Context
 	tx      map[int]transaction.Transaction
 }
 
-func NewTransactionPoolInitializer(ctx context.Context, pool Pool) transaction.Initializer {
+func NewTransactionPoolInitializer(pool Pool) transaction.Initializer {
 	return &TransactionPool{
 		pool: pool,
-		ctx:  ctx,
 		tx:   make(map[int]transaction.Transaction),
 	}
 }
@@ -68,11 +66,11 @@ func (t *TransactionPool) Commit() (err error) {
 	return tx.Commit()
 }
 
-func (t *TransactionPool) Begin() (transaction.Transaction, error) {
+func (t *TransactionPool) Begin(ctx context.Context) (transaction.Transaction, error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	tx, err := t.pool.Get(t.ctx).(transaction.Initializer).Begin()
+	tx, err := t.pool.Get(ctx).(transaction.Initializer).Begin(ctx)
 	t.txCount++
 	t.tx[t.txCount] = tx
 

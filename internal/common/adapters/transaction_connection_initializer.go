@@ -1,8 +1,10 @@
 package adapters
 
 import (
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
+	"context"
 	"sync"
+
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 type TransactionConnectionInitializer struct {
@@ -16,7 +18,7 @@ func NewTransactionConnectionInitializer(connection *ConnectionSqlShared) *Trans
 	}
 }
 
-func (i *TransactionConnectionInitializer) Begin() (transaction.Transaction, error) {
+func (i *TransactionConnectionInitializer) Begin(ctx context.Context) (transaction.Transaction, error) {
 	i.mu.Lock()
 	defer i.mu.Unlock()
 
@@ -24,7 +26,7 @@ func (i *TransactionConnectionInitializer) Begin() (transaction.Transaction, err
 		return nil, err
 	}
 
-	tx, err := i.connection.db.Begin()
+	tx, err := i.connection.db.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

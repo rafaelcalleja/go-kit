@@ -1,9 +1,12 @@
 package transaction
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/rafaelcalleja/go-kit/uuid"
 )
 
 var (
@@ -13,6 +16,16 @@ var (
 	ErrUnableToCommitTransaction   = errors.New("unable to commit transaction")
 	ErrPanicInOperation            = errors.New("panic in operation")
 	ErrPanicInTransaction          = errors.New("panic in transaction")
+)
+
+type sessionKey string
+
+func (c sessionKey) String() string {
+	return "atomic_session_" + string(c)
+}
+
+var (
+	CtxSessionIdKey = sessionKey("id")
 )
 
 type SessionInitializer struct {
@@ -26,9 +39,11 @@ func NewTransactionalSession(initializer Initializer) *SessionInitializer {
 	}
 }
 
-func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) {
+func (s *SessionInitializer) ExecuteAtomically(ctx context.Context, operation Operation) (err error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
+
+	ctx = context.WithValue(ctx, CtxSessionIdKey.String(), uuid.New().Create())
 
 	var tx Transaction
 
@@ -49,7 +64,7 @@ func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) 
 		err = s.finishTransaction(err, tx.(Transaction))
 	}()
 
-	tx, err = s.initializer.Begin()
+	tx, err = s.initializer.Begin(ctx)
 
 	if nil == tx {
 		return ErrInitializerNilTransaction
@@ -59,7 +74,7 @@ func (s *SessionInitializer) ExecuteAtomically(operation Operation) (err error) 
 		return fmt.Errorf("%w: %s", err, ErrUnableToStartTransaction.Error())
 	}
 
-	return operation()
+	return operation(ctx)
 }
 
 func (s *SessionInitializer) finishTransaction(err error, tx Transaction) (txErr error) {

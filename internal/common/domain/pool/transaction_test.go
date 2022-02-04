@@ -24,7 +24,7 @@ func TestNewTransactionPoolSuccess(t *testing.T) {
 		return nil
 	}
 
-	mockInitializer.BeginFn = func() (tx transaction.Transaction, err error) {
+	mockInitializer.BeginFn = func(ctx context.Context) (tx transaction.Transaction, err error) {
 		return mockTransaction, nil
 	}
 
@@ -41,10 +41,10 @@ func TestNewTransactionPoolSuccess(t *testing.T) {
 		poolReleaseCounter = poolReleaseCounter + 1
 	}
 
-	txPool := NewTransactionPoolInitializer(ctx, mockPool)
+	txPool := NewTransactionPoolInitializer(mockPool)
 
-	tx, _ := txPool.Begin()
-	tx2, _ := txPool.Begin()
+	tx, _ := txPool.Begin(ctx)
+	tx2, _ := txPool.Begin(ctx)
 	_ = tx2.Rollback()
 	_ = tx.Commit()
 
@@ -63,14 +63,14 @@ func TestNewTransactionPoolError(t *testing.T) {
 		return mockInitializer
 	}
 
-	txPool := NewTransactionPoolInitializer(ctx, mockPool)
-	tx, _ := txPool.Begin()
+	txPool := NewTransactionPoolInitializer(mockPool)
+	tx, _ := txPool.Begin(ctx)
 	_ = tx.Commit()
 	err := tx.Commit()
 
 	require.Error(t, err)
 
-	tx2, _ := txPool.Begin()
+	tx2, _ := txPool.Begin(ctx)
 	_ = tx2.Rollback()
 	err2 := tx.Rollback()
 	require.Error(t, err2)

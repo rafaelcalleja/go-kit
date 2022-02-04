@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"context"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
 	"github.com/stretchr/testify/assert"
@@ -14,9 +15,11 @@ func TestNewTransactionInitializerDb(t *testing.T) {
 		NewTransactionInitializerDb(connection),
 	)
 
+	ctx := context.Background()
+
 	called := false
 
-	_ = s.ExecuteAtomically(func() error {
+	_ = s.ExecuteAtomically(ctx, func() error {
 		called = true
 
 		return nil
