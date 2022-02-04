@@ -43,7 +43,7 @@ func (s *SessionInitializer) ExecuteAtomically(ctx context.Context, operation Op
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	ctx = context.WithValue(ctx, CtxSessionIdKey.String(), uuid.New().Create())
+	ctx = context.WithValue(ctx, CtxSessionIdKey.String(), uuid.New().String(uuid.New().Create()))
 
 	var tx Transaction
 

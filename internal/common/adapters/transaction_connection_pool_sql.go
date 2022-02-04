@@ -9,57 +9,61 @@ import (
 )
 
 type ConnectionPoolSql struct {
-	*ConnectionSql
-	pool *sync.Map
+	connection transaction.TxPool
+	db         *sql.DB
+	mu         sync.Mutex
 }
 
-func (e *ConnectionPoolSql) resolveConnection(ctx context.Context) transaction.Connection {
-	txId := ctx.Value(transaction.CtxSessionIdKey.String())
+func (e *ConnectionPoolSql) Begin(ctx context.Context) (transaction.Transaction, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
 
-	if nil != txId {
-		if cn, ok := e.pool.Load(txId); ok {
-			return cn.(transaction.Connection)
-		}
+	if err := e.db.Ping(); err != nil {
+		return nil, err
 	}
 
-	return e.db
+	tx, err := e.db.BeginTx(ctx, nil)
+	if nil != err {
+		return nil, err
+	}
+
+	txId := e.connection.StoreTransaction(ctx, tx)
+
+	return e.connection.GetTransaction(txId), err
 }
 
 func (e *ConnectionPoolSql) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	return e.resolveConnection(ctx).ExecContext(ctx, query, args...)
+	return e.connection.GetConnection(ctx).ExecContext(ctx, query, args...)
 }
 
 func (e *ConnectionPoolSql) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	return e.resolveConnection(ctx).PrepareContext(ctx, query)
+	return e.connection.GetConnection(ctx).PrepareContext(ctx, query)
 }
 
 func (e *ConnectionPoolSql) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	return e.resolveConnection(ctx).QueryContext(ctx, query, args...)
+	return e.connection.GetConnection(ctx).QueryContext(ctx, query, args...)
 }
 
 func (e *ConnectionPoolSql) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
-	return e.resolveConnection(ctx).QueryRowContext(ctx, query, args...)
+	return e.connection.GetConnection(ctx).QueryRowContext(ctx, query, args...)
 }
 
-func NewConnectionPoolSql(pool *sync.Map, db *sql.DB) transaction.Connection {
+func NewConnectionPoolInitializerSql(connection transaction.TxPool) transaction.Initializer {
 	conn := &ConnectionPoolSql{
-		ConnectionSql: &ConnectionSql{
-			object: db,
-			db:     db,
-		},
-		pool: pool,
+		connection: connection,
+		db:         connection.GetConnection(context.Background()).(*sql.DB),
 	}
 
 	return conn

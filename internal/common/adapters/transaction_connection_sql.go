@@ -11,7 +11,6 @@ import (
 type ConnectionSql struct {
 	object transaction.Connection
 	mu     sync.RWMutex
-	db     *sql.DB
 }
 
 func (e *ConnectionSql) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
@@ -63,8 +62,7 @@ func (e *ConnectionSql) QueryRowContext(ctx context.Context, query string, args 
 }
 
 func NewConnectionSql(db *sql.DB) transaction.Connection {
-	ex := new(ConnectionSql)
-	ex.object = db
-	ex.db = db
-	return ex
+	return &ConnectionSql{
+		object: db,
+	}
 }
