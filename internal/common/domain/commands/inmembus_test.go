@@ -50,7 +50,7 @@ func TestCommandBus_Dispatch(t *testing.T) {
 		require.NoError(t, err)
 
 		commandBus.UseMiddleware(middleware.NewMiddlewareFunc(
-			func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
+			func(stack middleware.StackMiddleware, ctx context.Context, closure middleware.Closure) error {
 				return nil
 			}),
 		)

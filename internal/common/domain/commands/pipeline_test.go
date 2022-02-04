@@ -11,24 +11,24 @@ func TestDefaultPipeline_Handle(t *testing.T) {
 	mockCommand := newMockCommand()
 	mockHandler := newMockHandler()
 	ctx := context.Background()
+	var expectedContext context.Context
 
 	pipeline := NewPipeline()
 
 	countCalled := 0
-	middlewareA := middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, middlewareCtx middleware.Context) error {
+	middlewareA := middleware.NewMiddlewareFunc(func(stack middleware.StackMiddleware, ctx context.Context, closure middleware.Closure) error {
 		countCalled++
-		pipelineContext := GetPipelineContext(middlewareCtx)
-		currentCtx := pipelineContext.Ctx
+		pipelineContext := GetPipelineContext(ctx)
 		cmd := pipelineContext.Command
+		expectedContext = ctx
 
-		require.Same(t, ctx, currentCtx)
 		require.Equal(t, mockCommand.Type(), cmd.Type())
-		return stack.Next().Handle(stack, middlewareCtx)
+		return stack.Next().Handle(stack, ctx, closure)
 	})
 
 	calledHandlerCounter := 0
 	mockHandler.HandleFn = func(currentCtx context.Context, command Command) error {
-		require.Same(t, ctx, currentCtx)
+		require.Same(t, expectedContext, currentCtx)
 		require.Equal(t, mockCommand.Type(), command.Type())
 		calledHandlerCounter++
 		return nil

@@ -3,11 +3,11 @@ package middleware
 import "context"
 
 type Middleware interface {
-	Handle(stack StackMiddleware, ctx Context) error
+	Handle(stack StackMiddleware, ctx context.Context, closure Closure) error
 }
 
 // Closure defines the handler used by middleware as return value.
-type Closure func() error
+type Closure func(context.Context) error
 
 type Pipeline struct {
 	stack *DefaultStackMiddleware
@@ -28,26 +28,8 @@ func (p *Pipeline) Add(middlewares ...Middleware) {
 	p.stack.Push(elements...)
 }
 
-func (p Pipeline) Handle(ctx Context) error {
+func (p Pipeline) Handle(ctx context.Context, closure Closure) error {
 	clone := p.stack.Clone()
 
-	return clone.Next().Handle(&clone, ctx)
-}
-
-const ctxDefaultContext string = "pipeline_context"
-
-type DefaultContext struct {
-	Ctx context.Context
-}
-
-func GetDefaultContext(context Context) DefaultContext {
-	return context.Get(ctxDefaultContext).(DefaultContext)
-}
-
-func setDefaultContext(ctx context.Context, context Context) {
-	pipelineContext := DefaultContext{
-		ctx,
-	}
-
-	context.Set(ctxDefaultContext, pipelineContext)
+	return clone.Next().Handle(&clone, ctx, closure)
 }

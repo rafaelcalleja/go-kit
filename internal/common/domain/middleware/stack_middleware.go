@@ -1,5 +1,9 @@
 package middleware
 
+import (
+	"context"
+)
+
 type StackMiddleware interface {
 	Next() Middleware
 }
@@ -40,8 +44,8 @@ func (s *DefaultStackMiddleware) Stack() *Stack {
 	return s.stack
 }
 
-func (s *DefaultStackMiddleware) Handle(_ StackMiddleware, ctx Context) error {
-	return ctx.Invoke()
+func (s *DefaultStackMiddleware) Handle(_ StackMiddleware, ctx context.Context, closure Closure) error {
+	return closure(ctx)
 }
 
 func (s *DefaultStackMiddleware) Next() Middleware {
