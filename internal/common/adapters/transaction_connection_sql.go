@@ -3,8 +3,9 @@ package adapters
 import (
 	"context"
 	"database/sql"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"sync"
+
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 type ConnectionSql struct {

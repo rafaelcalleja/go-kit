@@ -20,44 +20,16 @@ type sqlProduct struct {
 }
 
 type ProductRepository struct {
-	broker     *transaction.Broker
 	connection transaction.Connection
-	backup     transaction.Connection
 	dbTimeout  time.Duration
-	mux        sync.RWMutex
-	cond       *sync.Cond
-	msgCh      chan interface{}
-	conns      map[int]transaction.Connection
-	pool       *sync.Map
+	mux        sync.Mutex
 }
 
-func NewMysqlProductRepository(pool *sync.Map, broker *transaction.Broker, connection transaction.Connection, dbTimeout time.Duration) *ProductRepository {
-	//msgCh := broker.Subscribe()
-
+func NewMysqlProductRepository(connection transaction.Connection, dbTimeout time.Duration) *ProductRepository {
 	repository := &ProductRepository{
 		connection: connection,
-		backup:     connection,
-		broker:     broker,
 		dbTimeout:  dbTimeout,
-		cond:       sync.NewCond(&sync.Mutex{}),
-		//msgCh:      msgCh,
-		conns: make(map[int]transaction.Connection),
-		pool:  pool,
 	}
-
-	/*go func() {
-		for msg := range msgCh {
-			switch msg {
-			case nil:
-				repository.connection = repository.backup
-			default:
-				bc := msg.(*transaction.BrokerConnClient)
-				repository.conns[bc.Id] = bc.Tx.(transaction.Connection)
-			}
-
-			broker.MsgReceived()
-		}
-	}()*/
 
 	return repository
 }
@@ -65,15 +37,6 @@ func NewMysqlProductRepository(pool *sync.Map, broker *transaction.Broker, conne
 func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
-
-	txId := ctx.Value(transaction.CtxSessionIdKey.String())
-	m.connection = m.backup
-	if nil != txId {
-		if cn, ok := m.pool.Load(txId); ok {
-			m.connection = cn.(transaction.Connection)
-		}
-
-	}
 
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 	query, args := productSQLStruct.InsertInto(sqlProductTable, sqlProduct{
@@ -100,15 +63,6 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*domain.Product, error) {
 	m.mux.Lock()
 	defer m.mux.Unlock()
-
-	txId := ctx.Value(transaction.CtxSessionIdKey.String())
-	m.connection = m.backup
-	if nil != txId {
-		if cn, ok := m.pool.Load(txId); ok {
-			m.connection = cn.(transaction.Connection)
-		}
-
-	}
 
 	productSQLStruct := sqlbuilder.NewStruct(new(sqlProduct))
 

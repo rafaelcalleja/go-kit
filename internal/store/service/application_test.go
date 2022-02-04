@@ -32,10 +32,9 @@ import (
 var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
-	connection         = common_adapters.NewConnectionSql(mysqlConnection)
+	connection         = common_adapters.NewConnectionPoolSql(poolMap, mysqlConnection)
 
-	broker            = transaction.NewBroker()
-	productRepository = adapters.NewMysqlProductRepository(poolMap, broker, connection, 60*time.Second)
+	productRepository = adapters.NewMysqlProductRepository(connection, 60*time.Second)
 	inMemBus          = commands.NewInMemCommandBus()
 
 	poolMap = &sync.Map{}
@@ -47,7 +46,7 @@ var (
 				transaction.NewChainTxInitializer(
 					common_adapters.NewTransactionConnectionPoolInitializer(
 						poolMap,
-						connection.(*common_adapters.ConnectionSql),
+						connection.(*common_adapters.ConnectionPoolSql),
 					),
 					events.NewMementoTx(eventStore),
 				),
