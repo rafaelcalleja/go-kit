@@ -45,8 +45,8 @@ type MockTransactionalSession struct {
 	ExecuteAtomicallyFn func(context.Context, Operation) error
 }
 
-func NewTransactionalSessionMock() MockTransactionalSession {
-	return MockTransactionalSession{
+func NewTransactionalSessionMock() TransactionalSession {
+	return &MockTransactionalSession{
 		ExecuteAtomicallyFn: func(ctx context.Context, operation Operation) error { return nil },
 	}
 }

@@ -13,18 +13,18 @@ func TestNewTransactionPoolSuccess(t *testing.T) {
 	mockTransaction := transaction.NewMockTransaction()
 
 	commitCalledCount := 0
-	mockTransaction.CommitFn = func() error {
+	mockTransaction.(*transaction.MockTransaction).CommitFn = func() error {
 		commitCalledCount = commitCalledCount + 1
 		return nil
 	}
 
 	rollbackCalledCount := 0
-	mockTransaction.RollbackFn = func() error {
+	mockTransaction.(*transaction.MockTransaction).RollbackFn = func() error {
 		rollbackCalledCount = rollbackCalledCount + 1
 		return nil
 	}
 
-	mockInitializer.BeginFn = func(ctx context.Context) (tx transaction.Transaction, err error) {
+	mockInitializer.(*transaction.MockInitializer).BeginFn = func(ctx context.Context) (tx transaction.Transaction, err error) {
 		return mockTransaction, nil
 	}
 
