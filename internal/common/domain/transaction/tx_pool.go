@@ -22,7 +22,12 @@ func (t *txFromPool) GetConnection(ctx context.Context) Connection {
 
 	conn, _ := t.Load(txId.(string))
 
-	return conn.(Connection)
+	switch conn.(type) {
+	case Connection:
+		return conn.(Connection)
+	default:
+		return t.db
+	}
 }
 
 func NewTxPool(db Connection) TxPool {
@@ -65,7 +70,7 @@ func (t *txFromPool) StoreTransaction(ctx context.Context, transaction Transacti
 }
 
 func (t *txFromPool) RemoveTransaction(txId TxId) {
-	t.Delete(txId.id)
+	t.Delete(txId.String())
 }
 
 func (t *txFromPool) Rollback() (err error) {
