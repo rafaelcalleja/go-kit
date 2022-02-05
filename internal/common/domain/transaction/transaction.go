@@ -20,3 +20,10 @@ type Connection interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
+
+type TxPool interface {
+	GetConnection(ctx context.Context) Connection
+	StoreTransaction(ctx context.Context, transaction Transaction) TxId
+	GetTransaction(txId TxId) Transaction
+	RemoveTransaction(txId TxId)
+}

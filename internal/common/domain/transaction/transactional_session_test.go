@@ -26,7 +26,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockErr := errors.New("mock tx")
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return NewMockTransaction(), mockErr
 		}
 
@@ -43,11 +43,11 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock commit")
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			return mockErr
 		}
 
@@ -65,11 +65,11 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockTransaction := NewMockTransaction()
 		mockErr := errors.New("mock rollback")
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			return mockErr
 		}
 
@@ -85,18 +85,18 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
 		calledRollback := false
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			calledRollback = true
 			return nil
 		}
 
 		calledCommit := false
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			calledCommit = true
 			return nil
 		}
@@ -112,18 +112,18 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
 		calledRollback := false
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			calledRollback = true
 			return nil
 		}
 
 		calledCommit := false
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			calledCommit = true
 			return nil
 		}
@@ -141,18 +141,18 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
 		calledRollback := false
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			calledRollback = true
 			return nil
 		}
 
 		calledCommit := false
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			calledCommit = true
 			return nil
 		}
@@ -170,18 +170,18 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
 		calledRollback := false
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			calledRollback = true
 			return nil
 		}
 
 		calledCommit := false
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			calledCommit = true
 			return nil
 		}
@@ -202,7 +202,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			panic("panic from tx begin")
 		}
 
@@ -217,11 +217,11 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
-		mockTransaction.CommitFn = func() error {
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
 			panic("panic from tx commit")
 		}
 
@@ -236,11 +236,11 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		mockInitializer := NewMockInitializer()
 		mockTransaction := NewMockTransaction()
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return mockTransaction, nil
 		}
 
-		mockTransaction.RollbackFn = func() error {
+		mockTransaction.(*MockTransaction).RollbackFn = func() error {
 			panic("panic from tx rollback")
 		}
 
@@ -254,7 +254,7 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		t.Parallel()
 		mockInitializer := NewMockInitializer()
 
-		mockInitializer.BeginFn = func(_ context.Context) (tx Transaction, err error) {
+		mockInitializer.(*MockInitializer).BeginFn = func(_ context.Context) (tx Transaction, err error) {
 			return nil, nil
 		}
 

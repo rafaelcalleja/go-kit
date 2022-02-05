@@ -34,13 +34,6 @@ func NewTxPool(db Connection) TxPool {
 	return t
 }
 
-type TxPool interface {
-	GetConnection(ctx context.Context) Connection
-	StoreTransaction(ctx context.Context, transaction Transaction) TxId
-	GetTransaction(txId TxId) Transaction
-	RemoveTransaction(txId TxId)
-}
-
 func (t *txFromPool) GetTransaction(txId TxId) Transaction {
 	transaction, _ := t.Load(txId.String())
 
