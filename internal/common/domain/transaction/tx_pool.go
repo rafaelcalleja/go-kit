@@ -2,7 +2,13 @@ package transaction
 
 import (
 	"context"
+	"errors"
 	"sync"
+)
+
+var (
+	ErrTransactionNotFound     = errors.New("transaction not found")
+	ErrTransactionIdDuplicated = errors.New("transaction id duplicated")
 )
 
 type txFromPool struct {
@@ -14,7 +20,7 @@ type txFromPool struct {
 }
 
 func (t *txFromPool) GetConnection(ctx context.Context) Connection {
-	txId := ctx.Value(ctxSessionIdKey.String())
+	txId := ctx.Value(transactionKey{})
 
 	if nil == txId {
 		return t.db
@@ -39,8 +45,12 @@ func NewTxPool(db Connection) TxPool {
 	return t
 }
 
-func (t *txFromPool) GetTransaction(txId TxId) Transaction {
-	transaction, _ := t.Load(txId.String())
+func (t *txFromPool) GetTransaction(txId TxId) (Transaction, error) {
+	transaction, ok := t.Load(txId.String())
+
+	if false == ok {
+		return &txFromPool{}, ErrTransactionNotFound
+	}
 
 	var t3 Transaction
 
@@ -51,22 +61,30 @@ func (t *txFromPool) GetTransaction(txId TxId) Transaction {
 		txId: txId,
 	}
 
-	return t3
+	return t3, nil
 }
 
-func (t *txFromPool) StoreTransaction(ctx context.Context, transaction Transaction) TxId {
-	txId := ctx.Value(ctxSessionIdKey.String())
+func (t *txFromPool) StoreTransaction(ctx context.Context, transaction Transaction) (TxId, error) {
+	txId := ctx.Value(transactionKey{})
 
 	if nil == txId {
 		idVo, _ := NewRandomTxId()
 		txId = idVo.String()
 	}
 
-	txVO, _ := NewTxId(txId.(string))
+	txVO, err := NewTxId(txId.(string))
+
+	if nil != err {
+		return TxId{}, err
+	}
+
+	if _, exists := t.Load(txVO.String()); exists == true {
+		return TxId{}, ErrTransactionIdDuplicated
+	}
 
 	t.Store(txVO.String(), transaction)
 
-	return *txVO
+	return *txVO, nil
 }
 
 func (t *txFromPool) RemoveTransaction(txId TxId) {
@@ -93,4 +111,14 @@ func (t *txFromPool) Commit() error {
 	}()
 
 	return t.tx.Commit()
+}
+
+func (t *txFromPool) Len() int {
+	length := 0
+	t.Range(func(_, _ interface{}) bool {
+		length++
+		return true
+	})
+
+	return length
 }

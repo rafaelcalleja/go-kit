@@ -5,6 +5,8 @@ import (
 	"database/sql"
 )
 
+type transactionKey struct{}
+
 type Initializer interface {
 	Begin(ctx context.Context) (Transaction, error)
 }
@@ -23,7 +25,7 @@ type Connection interface {
 
 type TxPool interface {
 	GetConnection(ctx context.Context) Connection
-	StoreTransaction(ctx context.Context, transaction Transaction) TxId
-	GetTransaction(txId TxId) Transaction
+	StoreTransaction(ctx context.Context, transaction Transaction) (TxId, error)
+	GetTransaction(txId TxId) (Transaction, error)
 	RemoveTransaction(txId TxId)
 }

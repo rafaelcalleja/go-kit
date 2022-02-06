@@ -2,9 +2,10 @@ package transaction
 
 import (
 	"context"
-	"github.com/rafaelcalleja/go-kit/uuid"
-	"github.com/stretchr/testify/require"
+	"errors"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestTxFromPool_GetConnection(t *testing.T) {
@@ -25,9 +26,10 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 		expected := NewMockTransaction()
 
 		pool := NewTxPool(notExpected)
-		txId := pool.StoreTransaction(context.Background(), expected)
+		txId, err := pool.StoreTransaction(context.Background(), expected)
+		require.NoError(t, err)
 
-		ctx := context.WithValue(context.Background(), ctxSessionIdKey.String(), txId.String())
+		ctx := context.WithValue(context.Background(), transactionKey{}, txId.String())
 		actual := pool.GetConnection(ctx)
 
 		require.NotSame(t, notExpected, actual)
@@ -40,13 +42,69 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 
 		pool := NewTxPool(defaultDB)
 
-		atomicSessionId := uuid.New().String(uuid.New().Create())
-		ctx := context.WithValue(context.Background(), ctxSessionIdKey.String(), atomicSessionId)
+		atomicSessionId := "bc6359ec-18da-420e-aa35-6a4758de04f6"
+		ctx := context.WithValue(context.Background(), transactionKey{}, atomicSessionId)
 
-		txId := pool.StoreTransaction(ctx, txDB)
+		txId, err := pool.StoreTransaction(ctx, txDB)
+		require.NoError(t, err)
 		require.Same(t, txDB, pool.GetConnection(ctx))
+		require.Same(t, defaultDB, pool.GetConnection(context.Background()))
 
 		pool.RemoveTransaction(txId)
 		require.Same(t, defaultDB, pool.GetConnection(ctx))
+	})
+	t.Run("empty atomic session generate new txId", func(t *testing.T) {
+		mockConnection := NewMockConnection()
+		pool := NewTxPool(mockConnection)
+		mockTransaction := NewMockTransaction()
+		calledCounter := 0
+
+		commitError := errors.New("commit error")
+		mockTransaction.(*MockTransaction).CommitFn = func() error {
+			calledCounter++
+			if calledCounter > 1 {
+				return commitError
+			}
+
+			return nil
+		}
+
+		txId, err := pool.StoreTransaction(context.Background(), mockTransaction)
+		require.NoError(t, err)
+		transaction, err := pool.GetTransaction(txId)
+		require.NoError(t, err)
+		require.Same(
+			t,
+			mockTransaction,
+			pool.GetConnection(
+				context.WithValue(context.Background(), transactionKey{}, txId.String()),
+			),
+		)
+
+		require.Same(t, transaction.(*txFromPool).db, mockConnection)
+		require.True(t, transaction.(*txFromPool).txId.Equals(&txId))
+		require.Same(t, transaction.(*txFromPool).tx, mockTransaction)
+		require.Same(t, transaction.(*txFromPool).Map, pool.(*txFromPool).Map)
+
+		err = transaction.Commit()
+		require.Equal(t, calledCounter, 1)
+		require.NoError(t, err)
+		_, err = pool.GetTransaction(txId)
+		require.Error(t, ErrTransactionNotFound, err)
+
+		err = transaction.Commit()
+		require.ErrorIs(t, commitError, err)
+	})
+
+	t.Run("store multiple transaction from multiples contexts", func(t *testing.T) {
+		pool := NewTxPool(NewMockConnection())
+
+		_, _ = pool.StoreTransaction(context.Background(), NewMockTransaction())
+		_, _ = pool.StoreTransaction(context.Background(), NewMockTransaction())
+		txId, _ := pool.StoreTransaction(context.Background(), NewMockTransaction())
+		_, err := pool.StoreTransaction(context.WithValue(context.Background(), transactionKey{}, txId.String()), NewMockTransaction())
+		require.Error(t, ErrTransactionIdDuplicated, err)
+
+		require.Equal(t, 3, pool.(*txFromPool).Len())
 	})
 }

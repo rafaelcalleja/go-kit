@@ -27,9 +27,13 @@ func (e *ConnectionPoolSql) Begin(ctx context.Context) (transaction.Transaction,
 		return nil, err
 	}
 
-	txId := e.connection.StoreTransaction(ctx, tx)
+	txId, err := e.connection.StoreTransaction(ctx, tx)
 
-	return e.connection.GetTransaction(txId), err
+	if nil != err {
+		return nil, err
+	}
+
+	return e.connection.GetTransaction(txId)
 }
 
 func (e *ConnectionPoolSql) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {

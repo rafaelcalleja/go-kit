@@ -5,8 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-
-	"github.com/rafaelcalleja/go-kit/uuid"
 )
 
 var (
@@ -16,16 +14,6 @@ var (
 	ErrUnableToCommitTransaction   = errors.New("unable to commit transaction")
 	ErrPanicInOperation            = errors.New("panic in operation")
 	ErrPanicInTransaction          = errors.New("panic in transaction")
-)
-
-type sessionKey string
-
-func (c sessionKey) String() string {
-	return "atomic_session_" + string(c)
-}
-
-var (
-	ctxSessionIdKey = sessionKey("id")
 )
 
 type SessionInitializer struct {
@@ -43,7 +31,12 @@ func (s *SessionInitializer) ExecuteAtomically(ctx context.Context, operation Op
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	ctx = context.WithValue(ctx, ctxSessionIdKey.String(), uuid.New().String(uuid.New().Create()))
+	atomicSessionId, err := NewRandomTxId()
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, ErrUnableToStartTransaction.Error())
+	}
+
+	ctx = context.WithValue(ctx, transactionKey{}, atomicSessionId.String())
 
 	var tx Transaction
 
