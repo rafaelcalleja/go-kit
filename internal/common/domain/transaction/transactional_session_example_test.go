@@ -3,12 +3,18 @@ package transaction_test
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
+)
+
+var (
+	connectionPointers = make(map[string]int)
 )
 
 func Example_cleanArchitectureTx() {
@@ -67,9 +73,24 @@ func Example_cleanArchitectureTx() {
 		}()
 	}
 
+	// [connection.(type)=sql.result connection.address]
 	wg.Wait()
 
-	// Output: 4 6 4 6 4 6 4 6 4 6 2 2 2 2 2
+	// Output: [*sql.Tx=4 0x00000000]
+	//[*sql.Tx=6 0x00000000]
+	//[*sql.Tx=4 0x11111111]
+	//[*sql.Tx=6 0x11111111]
+	//[*sql.Tx=4 0x22222222]
+	//[*sql.Tx=6 0x22222222]
+	//[*sql.Tx=4 0x33333333]
+	//[*sql.Tx=6 0x33333333]
+	//[*sql.Tx=4 0x44444444]
+	//[*sql.Tx=6 0x44444444]
+	//[*sql.DB=2 0x55555555]
+	//[*sql.DB=2 0x55555555]
+	//[*sql.DB=2 0x55555555]
+	//[*sql.DB=2 0x55555555]
+	//[*sql.DB=2 0x55555555]
 }
 
 type handler struct {
@@ -95,7 +116,19 @@ func (s *handler) handle(ctx context.Context, value int) {
 			panic(err)
 		}
 
-		fmt.Printf(" %d", int(v))
+		//connection memory address
+		c := fmt.Sprintf("%p", s.conn.Get(ctx))
+
+		//fake connection memory address
+		var id string
+		if val, exists := connectionPointers[c]; exists == false {
+			connectionPointers[c] = len(connectionPointers)
+			id = "0x" + strings.Repeat(strconv.Itoa(connectionPointers[c]), 8)
+		} else {
+			id = "0x" + strings.Repeat(strconv.Itoa(val), 8)
+		}
+
+		fmt.Printf("[%T=%d %s]\n", s.conn.Get(ctx), int(v), id)
 		return
 	}
 
