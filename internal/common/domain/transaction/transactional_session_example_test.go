@@ -34,7 +34,11 @@ func Example_cleanArchitectureTx() {
 		transaction.NewTxHandlerInitializer(transactionHandler, common_adapters.NewSqlDBInitializer(connection)),
 	)
 
-	service := handler{
+	domainService := &handler{
+		conn: querier,
+	}
+
+	eventPublisher := &handler{
 		conn: querier,
 	}
 
@@ -51,8 +55,8 @@ func Example_cleanArchitectureTx() {
 		go func() {
 			_ = txSession.ExecuteAtomically(ctx, func(ctx context.Context) error {
 
-				service.handle(ctx, 2)
-				service.handle(ctx, 3)
+				domainService.handle(ctx, 2)
+				eventPublisher.handle(ctx, 3)
 
 				wg.Done()
 
@@ -68,7 +72,7 @@ func Example_cleanArchitectureTx() {
 		wg.Add(1)
 
 		go func() {
-			service.handle(ctx, 1)
+			domainService.handle(ctx, 1)
 			wg.Done()
 		}()
 	}
