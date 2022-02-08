@@ -3,6 +3,15 @@ package transaction
 import (
 	"context"
 	"database/sql"
+	"errors"
+)
+
+var (
+	ErrUnableToGenerateNewSession = errors.New("unable to generate new session")
+
+	_ Querier = &sql.DB{}
+	_ Querier = &sql.Tx{}
+	_ Querier = &sql.Conn{}
 )
 
 type transactionKey struct{}
@@ -16,16 +25,18 @@ type Transaction interface {
 	Commit() error
 }
 
-type Connection interface {
+type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-type TxPool interface {
-	GetConnection(ctx context.Context) Connection
-	StoreTransaction(ctx context.Context, transaction Transaction) (TxId, error)
+type TxHandler interface {
+	ManageTransaction(ctx context.Context, transaction Transaction) (TxId, error)
 	GetTransaction(txId TxId) (Transaction, error)
-	RemoveTransaction(txId TxId)
+}
+
+type SafeQuerier interface {
+	Get(ctx context.Context) Querier
 }

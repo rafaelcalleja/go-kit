@@ -28,7 +28,7 @@ func TestProductRepository_Save_Err(t *testing.T) {
 		WithArgs(productId).
 		WillReturnError(errors.New("something-failed"))
 
-	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 1*time.Millisecond)
+	repo := NewMysqlProductRepository(transaction.NewTxHandler(db).(transaction.SafeQuerier), 1*time.Millisecond)
 
 	err = repo.Save(context.Background(), product)
 
@@ -51,7 +51,7 @@ func TestProductRepository_Save_Success(t *testing.T) {
 		WithArgs(productId).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
-	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 1*time.Millisecond)
+	repo := NewMysqlProductRepository(transaction.NewTxHandler(db).(transaction.SafeQuerier), 1*time.Millisecond)
 
 	err = repo.Save(context.Background(), product)
 
@@ -76,7 +76,7 @@ func TestProductRepository_Of_Success(t *testing.T) {
 		WithArgs(productId).
 		WillReturnRows(rows)
 
-	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 60*time.Second)
+	repo := NewMysqlProductRepository(transaction.NewTxHandler(db).(transaction.SafeQuerier), 60*time.Second)
 
 	_, err = repo.Of(context.Background(), productIdVO)
 
@@ -98,7 +98,7 @@ func TestProductRepository_Of_Empty(t *testing.T) {
 		WithArgs(productId).
 		WillReturnRows(sqlmock.NewRows([]string{}))
 
-	repo := NewMysqlProductRepository(transaction.NewTxPool(db), 60*time.Second)
+	repo := NewMysqlProductRepository(transaction.NewTxHandler(db).(transaction.SafeQuerier), 60*time.Second)
 
 	_, err = repo.Of(context.Background(), productIdVO)
 

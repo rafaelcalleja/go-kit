@@ -31,12 +31,10 @@ func (s *SessionInitializer) ExecuteAtomically(ctx context.Context, operation Op
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	atomicSessionId, err := NewRandomTxId()
-	if err != nil {
-		return fmt.Errorf("%w: %s", err, ErrUnableToStartTransaction.Error())
+	ctx, err = contextWithNewRandomSessionId(ctx)
+	if nil != err {
+		return err
 	}
-
-	ctx = context.WithValue(ctx, transactionKey{}, atomicSessionId.String())
 
 	var tx Transaction
 

@@ -20,12 +20,12 @@ type sqlProduct struct {
 }
 
 type ProductRepository struct {
-	connection transaction.TxPool
+	connection transaction.SafeQuerier
 	dbTimeout  time.Duration
 	mux        sync.Mutex
 }
 
-func NewMysqlProductRepository(connection transaction.TxPool, dbTimeout time.Duration) *ProductRepository {
+func NewMysqlProductRepository(connection transaction.SafeQuerier, dbTimeout time.Duration) *ProductRepository {
 	repository := &ProductRepository{
 		connection: connection,
 		dbTimeout:  dbTimeout,
@@ -46,7 +46,7 @@ func (m *ProductRepository) Save(ctx context.Context, product *domain.Product) e
 	ctxTimeout, cancel := context.WithTimeout(ctx, m.dbTimeout)
 	defer cancel()
 
-	stmt, err := m.connection.GetConnection(ctx).PrepareContext(ctxTimeout, query)
+	stmt, err := m.connection.Get(ctx).PrepareContext(ctxTimeout, query)
 	if err != nil {
 		return fmt.Errorf("error trying to persist product on database: %v", err)
 	}
@@ -75,7 +75,7 @@ func (m *ProductRepository) Of(ctx context.Context, id *domain.ProductId) (*doma
 	sb.Limit(1)
 	rawSql, args := sb.Build()
 
-	rows, err := m.connection.GetConnection(ctx).QueryContext(ctxTimeout, rawSql, args...)
+	rows, err := m.connection.Get(ctx).QueryContext(ctxTimeout, rawSql, args...)
 
 	if nil != err {
 		return &domain.Product{}, fmt.Errorf("error trying to get a query database: %v", err)

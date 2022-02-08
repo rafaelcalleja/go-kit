@@ -22,14 +22,14 @@ func (m *MockInitializer) Begin(ctx context.Context) (tx Transaction, err error)
 type MockTransaction struct {
 	RollbackFn func() error
 	CommitFn   func() error
-	Connection
+	Querier
 }
 
 func NewMockTransaction() Transaction {
 	return &MockTransaction{
 		RollbackFn: func() error { return nil },
 		CommitFn:   func() error { return nil },
-		Connection: NewMockConnection(),
+		Querier:    NewMockConnection(),
 	}
 }
 
@@ -62,7 +62,7 @@ type MockConnection struct {
 	QueryRowContextFn func(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
-func NewMockConnection() Connection {
+func NewMockConnection() Querier {
 	return &MockConnection{
 		ExecContextFn:     func(ctx context.Context, query string, args ...interface{}) (sql.Result, error) { return nil, nil },
 		PrepareContextFn:  func(ctx context.Context, query string) (*sql.Stmt, error) { return nil, nil },

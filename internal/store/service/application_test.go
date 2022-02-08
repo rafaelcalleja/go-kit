@@ -31,16 +31,16 @@ import (
 var (
 	grpcAddr           = "localhost:3000"
 	mysqlConnection, _ = mysql_tests.NewMySQLConnection()
-	connection         = transaction.NewTxPool(mysqlConnection)
+	txHandler          = transaction.NewTxHandler(mysqlConnection)
 
-	productRepository = adapters.NewMysqlProductRepository(connection, 60*time.Second)
+	productRepository = adapters.NewMysqlProductRepository(txHandler.SafeQuerier(), 60*time.Second)
 	inMemBus          = commands.NewInMemCommandBus()
 
 	commandBus = commands.NewTransactionalCommandBus(
 		inMemBus,
 		transaction.NewTransactionalSession(
 			transaction.NewChainTxInitializer(
-				common_adapters.NewConnectionPoolInitializerSql(connection),
+				transaction.NewTxHandlerInitializer(txHandler, common_adapters.NewSqlDBInitializer(mysqlConnection)),
 				events.NewMementoTx(eventStore),
 			),
 		),
