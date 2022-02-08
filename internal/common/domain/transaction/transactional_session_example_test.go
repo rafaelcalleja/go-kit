@@ -46,8 +46,8 @@ func Example_cleanArchitectureTx() {
 
 	for x := 0; x < 5; x++ {
 		_sqlmock.ExpectBegin()
-		_sqlmock.ExpectQuery("SELECT .*").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(4))
-		_sqlmock.ExpectQuery("SELECT .*").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(6))
+		_sqlmock.ExpectQuery("SELECT 2\\+2").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(4))
+		_sqlmock.ExpectQuery("SELECT 3\\+3").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(6))
 		_sqlmock.ExpectCommit()
 
 		wg.Add(1)
@@ -68,7 +68,7 @@ func Example_cleanArchitectureTx() {
 	wg.Wait()
 
 	for x := 0; x < 5; x++ {
-		_sqlmock.ExpectQuery("SELECT .*").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(2))
+		_sqlmock.ExpectQuery("SELECT 1\\+1").WillReturnRows(sqlmock.NewRows([]string{""}).AddRow(2))
 		wg.Add(1)
 
 		go func() {
@@ -102,7 +102,7 @@ type handler struct {
 }
 
 func (s *handler) handle(ctx context.Context, value int) {
-	rows, err := s.conn.Get(ctx).QueryContext(ctx, "SELECT (?+?) as value", value, value)
+	rows, err := s.conn.Get(ctx).QueryContext(ctx, fmt.Sprintf("SELECT %d+%d", value, value))
 
 	if nil != err {
 		panic(err)
