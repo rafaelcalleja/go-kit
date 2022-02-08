@@ -6,9 +6,9 @@ replace github.com/rafaelcalleja/go-kit/uuid => ./../../uuid
 
 require (
 	cloud.google.com/go v0.34.0
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
-	github.com/jmoiron/sqlx v1.3.4
 	github.com/petermattis/goid v0.0.0-20220111183729-e033e1e0bdb5
 	github.com/pkg/errors v0.8.1
 	github.com/rafaelcalleja/go-kit/uuid v0.0.0-20220114085949-e6ff973b8411

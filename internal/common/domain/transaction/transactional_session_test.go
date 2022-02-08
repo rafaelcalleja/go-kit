@@ -263,4 +263,32 @@ func TestSessionInitializer_ExecuteAtomically(t *testing.T) {
 		require.Error(t, err)
 		require.ErrorIs(t, ErrInitializerNilTransaction, err)
 	})
+
+	t.Run("atomic session inside another session", func(t *testing.T) {
+		t.Parallel()
+		mockInitializer := NewMockInitializer()
+
+		calledCounter := 0
+		atomicSessionOp := func(ctx context.Context) error {
+			firstSessionId, err := sessionIdFromContext(ctx)
+			require.NoError(t, err)
+
+			calledCounter++
+
+			return NewTransactionalSession(mockInitializer).
+				ExecuteAtomically(ctx, func(ctx context.Context) error {
+					secondSessionId, err := sessionIdFromContext(ctx)
+					require.NoError(t, err)
+					require.True(t, firstSessionId.Equals(secondSessionId))
+
+					calledCounter++
+					return nil
+				})
+		}
+
+		session := NewTransactionalSession(mockInitializer)
+		err := session.ExecuteAtomically(ctx, atomicSessionOp)
+		require.NoError(t, err)
+		require.Equal(t, 2, calledCounter)
+	})
 }
