@@ -31,14 +31,11 @@ func (s *SessionInitializer) ExecuteAtomically(ctx context.Context, operation Op
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	_, err = sessionIdFromContext(ctx)
-
-	if nil == err {
+	if _, err = sessionIdFromContext(ctx); nil == err {
 		return operation(ctx)
 	}
 
-	ctx, err = contextWithNewRandomSessionId(ctx)
-	if nil != err {
+	if ctx, err = contextWithNewRandomSessionId(ctx); nil != err {
 		return err
 	}
 
