@@ -3,14 +3,12 @@ package transaction_test
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
-
 	"github.com/DATA-DOG/go-sqlmock"
 	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 var (
@@ -24,9 +22,7 @@ func Example_cleanArchitectureTx() {
 		panic(err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 50000*time.Microsecond)
-	defer cancel()
-
+	ctx := context.Background()
 	transactionHandler := transaction.NewTxHandler(connection)
 	querier := transactionHandler.SafeQuerier()
 
@@ -100,7 +96,9 @@ type handler struct {
 }
 
 func (s *handler) handle(ctx context.Context, value int) {
-	rows, err := s.conn.Get(ctx).QueryContext(ctx, fmt.Sprintf("SELECT %d+%d", value, value))
+	connection := s.conn.Get(ctx)
+
+	rows, err := connection.QueryContext(ctx, fmt.Sprintf("SELECT %d+%d", value, value))
 
 	if nil != err {
 		panic(err)
@@ -119,7 +117,7 @@ func (s *handler) handle(ctx context.Context, value int) {
 		}
 
 		//connection memory address
-		c := fmt.Sprintf("%p", s.conn.Get(ctx))
+		c := fmt.Sprintf("%p", connection)
 
 		//fake connection memory address
 		if _, exists := fakeMemoryAddress[c]; exists == false {
@@ -129,7 +127,7 @@ func (s *handler) handle(ctx context.Context, value int) {
 			fakeMemoryAddress[c] = fakeAddress
 		}
 
-		fmt.Printf("[%T=%d %s]\n", s.conn.Get(ctx), int(v), fakeMemoryAddress[c])
+		fmt.Printf("[%T=%d %s]\n", connection, int(v), fakeMemoryAddress[c])
 		return
 	}
 
