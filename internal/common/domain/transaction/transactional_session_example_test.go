@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	connectionPointers = make(map[string]int)
+	fakeMemoryAddress = make(map[string]string)
 )
 
 func Example_cleanArchitectureTx() {
@@ -53,12 +53,10 @@ func Example_cleanArchitectureTx() {
 		wg.Add(1)
 
 		go func() {
+			defer wg.Done()
 			_ = txSession.ExecuteAtomically(ctx, func(ctx context.Context) error {
-
 				domainService.handle(ctx, 2)
 				eventPublisher.handle(ctx, 3)
-
-				wg.Done()
 
 				return nil
 			})
@@ -72,8 +70,8 @@ func Example_cleanArchitectureTx() {
 		wg.Add(1)
 
 		go func() {
+			defer wg.Done()
 			domainService.handle(ctx, 1)
-			wg.Done()
 		}()
 	}
 
@@ -124,15 +122,14 @@ func (s *handler) handle(ctx context.Context, value int) {
 		c := fmt.Sprintf("%p", s.conn.Get(ctx))
 
 		//fake connection memory address
-		var id string
-		if val, exists := connectionPointers[c]; exists == false {
-			connectionPointers[c] = len(connectionPointers)
-			id = "0x" + strings.Repeat(strconv.Itoa(connectionPointers[c]), 8)
-		} else {
-			id = "0x" + strings.Repeat(strconv.Itoa(val), 8)
+		if _, exists := fakeMemoryAddress[c]; exists == false {
+			connectionCounter := len(fakeMemoryAddress)
+			strCounter := strconv.Itoa(connectionCounter)
+			fakeAddress := "0x" + strings.Repeat(strCounter, 8)
+			fakeMemoryAddress[c] = fakeAddress
 		}
 
-		fmt.Printf("[%T=%d %s]\n", s.conn.Get(ctx), int(v), id)
+		fmt.Printf("[%T=%d %s]\n", s.conn.Get(ctx), int(v), fakeMemoryAddress[c])
 		return
 	}
 
