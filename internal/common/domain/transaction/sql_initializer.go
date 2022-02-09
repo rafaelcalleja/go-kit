@@ -1,11 +1,9 @@
-package adapters
+package transaction
 
 import (
 	"context"
 	"database/sql"
 	"sync"
-
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 type SqlDBInitializer struct {
@@ -13,7 +11,7 @@ type SqlDBInitializer struct {
 	mu sync.Mutex
 }
 
-func (e *SqlDBInitializer) Begin(ctx context.Context) (transaction.Transaction, error) {
+func (e *SqlDBInitializer) Begin(ctx context.Context) (Transaction, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 
@@ -24,7 +22,7 @@ func (e *SqlDBInitializer) Begin(ctx context.Context) (transaction.Transaction, 
 	return e.db.BeginTx(ctx, nil)
 }
 
-func NewSqlDBInitializer(db *sql.DB) transaction.Initializer {
+func NewSqlDBInitializer(db *sql.DB) Initializer {
 	conn := &SqlDBInitializer{
 		db: db,
 	}

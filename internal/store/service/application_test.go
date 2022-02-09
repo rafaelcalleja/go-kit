@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
 	"github.com/rafaelcalleja/go-kit/internal/common/tests/mysql_tests"
 	"github.com/rafaelcalleja/go-kit/internal/store/application/command"
 	"github.com/rafaelcalleja/go-kit/uuid"
@@ -40,7 +39,7 @@ var (
 		inMemBus,
 		transaction.NewTransactionalSession(
 			transaction.NewChainTxInitializer(
-				transaction.NewTxHandlerInitializer(txHandler, common_adapters.NewSqlDBInitializer(mysqlConnection)),
+				transaction.NewTxHandlerInitializer(txHandler, transaction.NewSqlDBInitializer(mysqlConnection)),
 				events.NewMementoTx(eventStore),
 			),
 		),

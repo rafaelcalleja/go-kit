@@ -3,12 +3,12 @@ package transaction_test
 import (
 	"context"
 	"fmt"
-	"github.com/DATA-DOG/go-sqlmock"
-	common_adapters "github.com/rafaelcalleja/go-kit/internal/common/adapters"
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
 var (
@@ -27,7 +27,7 @@ func Example_cleanArchitectureTx() {
 	querier := transactionHandler.SafeQuerier()
 
 	txSession := transaction.NewTransactionalSession(
-		transaction.NewTxHandlerInitializer(transactionHandler, common_adapters.NewSqlDBInitializer(connection)),
+		transaction.NewTxHandlerInitializer(transactionHandler, transaction.NewSqlDBInitializer(connection)),
 	)
 
 	domainService := &handler{
