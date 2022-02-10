@@ -1,6 +1,16 @@
 .PHONY: docker-make
-docker-make proto lint test test_v test_short test_race test_stress test_reconnect test_all:
+docker-make proto lint test test_v test_short test_race test_stress test_reconnect test_all openapi_http:
 	@docker-compose run --rm dev make $(CMD)
+
+.PHONY: openapi_http
+openapi_http: CMD="_openapi_http"
+
+.PHONY: _openapi_http
+_openapi_http:
+	oapi-codegen -generate types -o "internal/store/ports/openapi_types.gen.go" -package "ports" "api/openapi/store.yml"
+	oapi-codegen -generate chi-server -o "internal/store/ports/openapi_api.gen.go" -package "ports" "api/openapi/store.yml"
+	oapi-codegen -generate types -o "internal/common/client/store/openapi_types.gen.go" -package "store" "api/openapi/store.yml"
+	oapi-codegen -generate client -o "internal/common/client/store/openapi_client_gen.go" -package "store" "api/openapi/store.yml"
 
 .PHONY: proto
 proto: CMD="_proto"

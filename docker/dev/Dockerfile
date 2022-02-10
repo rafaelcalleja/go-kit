@@ -14,7 +14,7 @@ RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
 
 FROM go AS oapi-codegen
 # TODO: update to v1.5.1
-RUN go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.3.9
+RUN go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.9.1
 
 FROM go AS cleanarch
 RUN go install github.com/roblaszczak/go-cleanarch@v1.2.1
