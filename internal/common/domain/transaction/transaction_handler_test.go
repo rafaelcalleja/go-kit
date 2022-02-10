@@ -23,7 +23,7 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 
 	t.Run("get stored connection on context with atomic session id", func(t *testing.T) {
 		notExpected := NewMockConnection()
-		expected := NewMockTransaction()
+		expected := NewMockTxQuerier()
 
 		pool := NewTxHandler(notExpected)
 		txId, err := pool.ManageTransaction(context.Background(), expected)
@@ -38,7 +38,7 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 
 	t.Run("previous atomic session exists", func(t *testing.T) {
 		defaultDB := NewMockConnection()
-		txDB := NewMockTransaction()
+		txDB := NewMockTxQuerier()
 
 		pool := NewTxHandler(defaultDB)
 
@@ -57,7 +57,7 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 	t.Run("empty atomic session generate new txId", func(t *testing.T) {
 		mockConnection := NewMockConnection()
 		pool := NewTxHandler(mockConnection)
-		mockTransaction := NewMockTransaction()
+		mockTransaction := NewMockTxQuerier()
 		calledCounter := 0
 
 		commitError := errors.New("commit error")
@@ -99,10 +99,10 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 	t.Run("store multiple transaction from multiples contexts", func(t *testing.T) {
 		pool := NewTxHandler(NewMockConnection())
 
-		_, _ = pool.ManageTransaction(context.Background(), NewMockTransaction())
-		_, _ = pool.ManageTransaction(context.Background(), NewMockTransaction())
-		txId, _ := pool.ManageTransaction(context.Background(), NewMockTransaction())
-		_, err := pool.ManageTransaction(context.WithValue(context.Background(), transactionKey{}, txId.String()), NewMockTransaction())
+		_, _ = pool.ManageTransaction(context.Background(), NewMockTxQuerier())
+		_, _ = pool.ManageTransaction(context.Background(), NewMockTxQuerier())
+		txId, _ := pool.ManageTransaction(context.Background(), NewMockTxQuerier())
+		_, err := pool.ManageTransaction(context.WithValue(context.Background(), transactionKey{}, txId.String()), NewMockTxQuerier())
 		require.Error(t, ErrTransactionIdDuplicated, err)
 
 		require.Equal(t, 3, pool.repo.Len())
@@ -110,7 +110,7 @@ func TestTxFromPool_GetConnection(t *testing.T) {
 
 	t.Run("rollback remove tx", func(t *testing.T) {
 		pool := NewTxHandler(NewMockConnection())
-		mockTransaction := NewMockTransaction()
+		mockTransaction := NewMockTxQuerier()
 
 		calledCounter := 0
 		rollbackErr := errors.New("rollback error")

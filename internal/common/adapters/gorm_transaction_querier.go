@@ -4,12 +4,10 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 	"gorm.io/gorm"
 )
 
 type GormDB struct {
-	transaction.Querier
 	*gorm.DB
 }
 

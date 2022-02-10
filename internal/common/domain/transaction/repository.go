@@ -12,7 +12,7 @@ type Repository interface {
 }
 
 type begunTransaction struct {
-	transaction Transaction
+	transaction TxQuerier
 	id          *TxId
 }
 
@@ -35,7 +35,7 @@ func begunTransactionWith(options ...func(*begunTransaction) error) (*begunTrans
 	return bt, nil
 }
 
-func begunTransactionWithTransaction(transaction Transaction) func(*begunTransaction) error {
+func begunTransactionWithTransaction(transaction TxQuerier) func(*begunTransaction) error {
 	return func(s *begunTransaction) error {
 		s.transaction = transaction
 		return nil
@@ -55,14 +55,14 @@ func begunTransactionWithTxId(id string) func(*begunTransaction) error {
 	}
 }
 
-func newBegunTransaction(id string, transaction Transaction) (*begunTransaction, error) {
+func newBegunTransaction(id string, transaction TxQuerier) (*begunTransaction, error) {
 	return begunTransactionWith(
 		begunTransactionWithTransaction(transaction),
 		begunTransactionWithTxId(id),
 	)
 }
 
-func newBegunTransactionFromContext(ctx context.Context, transaction Transaction) (*begunTransaction, error) {
+func newBegunTransactionFromContext(ctx context.Context, transaction TxQuerier) (*begunTransaction, error) {
 	sessionId, err := sessionIdFromContext(ctx)
 
 	if err == nil {
@@ -98,7 +98,7 @@ func (t *begunTxRepository) Of(_ context.Context, txId TxId) (*begunTransaction,
 	}
 
 	return &begunTransaction{
-		transaction: transaction.(Transaction),
+		transaction: transaction.(TxQuerier),
 		id:          &txId,
 	}, nil
 }

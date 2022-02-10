@@ -48,7 +48,7 @@ func (t *txHandler) GetTransaction(txId TxId) (Transaction, error) {
 	}, nil
 }
 
-func (t *txHandler) ManageTransaction(ctx context.Context, transaction Transaction) (TxId, error) {
+func (t *txHandler) ManageTransaction(ctx context.Context, transaction TxQuerier) (TxId, error) {
 	bt, err := newBegunTransactionFromContext(ctx, transaction)
 
 	if nil != err {

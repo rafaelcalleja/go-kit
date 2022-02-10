@@ -138,7 +138,7 @@ func (s *handler) handle(ctx context.Context, value int) {
 		}
 
 		//connection memory address
-		c := fmt.Sprintf("%p", connection)
+		c := fmt.Sprintf("%p", tx)
 
 		//fake connection memory address
 		if _, exists := fakeMemoryAddress[c]; exists == false {

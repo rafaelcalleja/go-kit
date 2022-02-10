@@ -25,6 +25,11 @@ type Transaction interface {
 	Commit() error
 }
 
+type TxQuerier interface {
+	Transaction
+	Querier
+}
+
 type Querier interface {
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
@@ -33,7 +38,7 @@ type Querier interface {
 }
 
 type TxHandler interface {
-	ManageTransaction(ctx context.Context, transaction Transaction) (TxId, error)
+	ManageTransaction(ctx context.Context, transaction TxQuerier) (TxId, error)
 	GetTransaction(txId TxId) (Transaction, error)
 }
 

@@ -21,7 +21,7 @@ func (e *txHandlerInitializer) Begin(ctx context.Context) (Transaction, error) {
 		return nil, err
 	}
 
-	txId, err := e.handler.ManageTransaction(ctx, tx)
+	txId, err := e.handler.ManageTransaction(ctx, tx.(TxQuerier))
 
 	if nil != err {
 		return nil, err

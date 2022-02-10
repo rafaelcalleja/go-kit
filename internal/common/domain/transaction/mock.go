@@ -25,6 +25,11 @@ type MockTransaction struct {
 	Querier
 }
 
+func NewMockTxQuerier() TxQuerier {
+	tx := NewMockTransaction()
+	return tx.(TxQuerier)
+}
+
 func NewMockTransaction() Transaction {
 	return &MockTransaction{
 		RollbackFn: func() error { return nil },
