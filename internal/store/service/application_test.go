@@ -77,8 +77,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-func TestChannels(t *testing.T) {
-	ctx := context.Background()
+func TestConcurrency(t *testing.T) {
 	u := uuid.New()
 	client := tests.NewStoreGrpcClient(t, grpcAddr)
 
@@ -104,6 +103,8 @@ func TestChannels(t *testing.T) {
 
 				for i := 0; i < size; i++ {
 					go func() {
+						ctx := context.Background()
+
 						productId := u.String(u.Create())
 						_ = client.CreateProduct(ctx, productId)
 
@@ -151,6 +152,8 @@ func TestChannels(t *testing.T) {
 
 				for i := 0; i < size; i++ {
 					go func() {
+						ctx := context.Background()
+
 						productId := u.String(u.Create())
 						err := client.CreateProduct(ctx, productId)
 						require.Error(t, err)
