@@ -36,9 +36,7 @@ func (service CreateProductHandler) Handle(ctx context.Context, command commands
 		return err
 	}
 
-	_, err = service.repository.Of(ctx, product.ID())
-
-	if err == nil {
+	if _, err := service.repository.Of(ctx, product.ID()); err == nil {
 		return fmt.Errorf("%w: %s", ErrProductAlreadyExists, id)
 	}
 
