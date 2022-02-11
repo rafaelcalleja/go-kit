@@ -36,13 +36,13 @@ func TestDefaultPipeline_Handle(t *testing.T) {
 
 	pipeline.Add(middlewareA, middlewareA)
 
-	err := pipeline.Handle(mockHandler, ctx, mockCommand)
+	err := pipeline.Handle(ctx, mockHandler, mockCommand)
 	require.NoError(t, err)
 
 	require.Equal(t, 1, calledHandlerCounter)
 	require.Equal(t, 2, countCalled)
 
-	err = pipeline.Handle(mockHandler, ctx, mockCommand)
+	err = pipeline.Handle(ctx, mockHandler, mockCommand)
 	require.NoError(t, err)
 	require.Equal(t, 2, calledHandlerCounter)
 	require.Equal(t, 4, countCalled)

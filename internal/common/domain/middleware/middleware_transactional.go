@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 

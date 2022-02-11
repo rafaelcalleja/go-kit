@@ -2,12 +2,13 @@ package commands
 
 import (
 	"context"
+
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 )
 
 type Pipeline interface {
 	Add(middlewares ...middleware.Middleware)
-	Handle(handler Handler, ctx context.Context, cmd Command) error
+	Handle(ctx context.Context, handler Handler, cmd Command) error
 }
 
 type DefaultPipeline struct {
@@ -22,7 +23,7 @@ func (p *DefaultPipeline) Add(middlewares ...middleware.Middleware) {
 	p.middlewares = append(p.middlewares, middlewares...)
 }
 
-func (p DefaultPipeline) Handle(handler Handler, ctx context.Context, cmd Command) error {
+func (p DefaultPipeline) Handle(ctx context.Context, handler Handler, cmd Command) error {
 	pipeline := middleware.NewPipeline()
 
 	closure := func(ctx context.Context) error {

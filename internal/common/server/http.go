@@ -34,10 +34,10 @@ func RunHTTPServerOnAddr(addr string, createHandler func(router chi.Router) http
 }
 
 func setMiddlewares(router *chi.Mux) {
+	router.Use(middleware.Logger)
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
-	router.Use(middleware.Logger)
 
 	addCorsMiddleware(router)
 

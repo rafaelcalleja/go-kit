@@ -68,7 +68,7 @@ func newMockPipeline() mockPipeline {
 	}
 }
 
-func (p mockPipeline) Handle(handler Handler, ctx context.Context, command Command) error {
+func (p mockPipeline) Handle(ctx context.Context, handler Handler, command Command) error {
 	return p.HandleFn(handler, ctx, command)
 }
 
