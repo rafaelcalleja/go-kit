@@ -39,8 +39,11 @@ func main() {
 	}
 
 	txHandler := transaction.NewTxHandler(mysqlConnection)
+	bus := commands.NewInMemCommandBus()
+	bus.(*commands.CommandBus).UseMiddleware(commands.NewLoggerMiddleware())
+
 	commandBus := commands.NewTransactionalCommandBus(
-		commands.NewInMemCommandBus(),
+		bus,
 		transaction.NewTransactionalSession(
 			transaction.NewTxHandlerInitializer(txHandler, transaction.NewSqlDBInitializer(mysqlConnection)),
 		),

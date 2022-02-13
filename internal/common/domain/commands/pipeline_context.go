@@ -4,7 +4,17 @@ import (
 	"context"
 )
 
-const pipelineContextKey string = "pipeline_context"
+type contextKey struct {
+	name string
+}
+
+func (k *contextKey) String() string {
+	return "commands/middleware context value " + k.name
+}
+
+var (
+	pipelineContextKey = &contextKey{"pipeline_context"}
+)
 
 type PipelineContext struct {
 	Command Command

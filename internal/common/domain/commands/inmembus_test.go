@@ -19,7 +19,7 @@ func TestCommandBus_Dispatch(t *testing.T) {
 		mockPipeline := newMockPipeline()
 		mockPipeline.HandleFn = func(handler Handler, currentCtx context.Context, command Command) error {
 			require.Same(t, reflect.TypeOf(mockHandler), reflect.TypeOf(handler))
-			require.NotNil(t, currentCtx.Value(ctxBusIdKey.String()))
+			require.NotNil(t, GetCommandId(ctx))
 			require.Equal(t, mockCommand.Type(), command.Type())
 			called = true
 			return nil

@@ -2,27 +2,36 @@ package commands
 
 import (
 	"context"
-	"sync"
 
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/middleware"
 	"github.com/rafaelcalleja/go-kit/uuid"
 )
 
-type busKey string
+type busKey struct {
+	name string
+}
 
-func (c busKey) String() string {
-	return "bus_key_" + string(c)
+func (c *busKey) String() string {
+	return "commands/inmembus context value" + c.name
 }
 
 var (
-	ctxBusIdKey = busKey("bus_id")
+	ctxCommandIdKey = &busKey{"bus_id"}
 )
+
+func GetCommandId(ctx context.Context) string {
+	id, _ := ctx.Value(ctxCommandIdKey).(string)
+	return id
+}
+
+func WithCommandId(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, ctxCommandIdKey, id)
+}
 
 // CommandBus is an in-memory implementation of the commands.Bus.
 type CommandBus struct {
 	handlers map[Type]Handler
 	pipeline Pipeline
-	mu       sync.Mutex
 }
 
 func NewInMemCommandBusWith(options ...func(*CommandBus) error) (CommandBus, error) {
@@ -62,10 +71,7 @@ func NewInMemCommandBus() Bus {
 
 // Dispatch implements the commands.Bus interface.
 func (b *CommandBus) Dispatch(ctx context.Context, cmd Command) error {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-
-	ctx = context.WithValue(ctx, ctxBusIdKey.String(), uuid.New().Create())
+	ctx = WithCommandId(ctx, uuid.New().String(uuid.New().Create()))
 
 	handler, ok := b.handlers[cmd.Type()]
 	if !ok {

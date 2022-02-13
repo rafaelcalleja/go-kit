@@ -5,10 +5,6 @@ import (
 	"github.com/rafaelcalleja/go-kit/internal/common/domain/transaction"
 )
 
-var (
-	ctxTxBusDispatchingKey = busKey("tx_dispatching")
-)
-
 // TransactionalBus is an implementation of the commands.Handler.
 type TransactionalBus struct {
 	Bus
@@ -24,8 +20,6 @@ func NewTransactionalCommandBus(commandBus Bus, session transaction.Transactiona
 
 // Dispatch implements the commands.Bus interface.
 func (b *TransactionalBus) Dispatch(ctx context.Context, cmd Command) error {
-	ctx = context.WithValue(ctx, ctxTxBusDispatchingKey, cmd)
-
 	return b.session.ExecuteAtomically(ctx, func(ctx context.Context) error {
 		return b.Bus.Dispatch(ctx, cmd)
 	})
